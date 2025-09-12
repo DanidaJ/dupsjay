@@ -1,0 +1,15 @@
+{
+  "name": "dupsjay-appointment",
+  "version": "1.0.0",
+  "description": "Root package for DUPSJay appointment system",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm install && cd dupsjay-backend && npm install && cd ../dupsjay-frontend && npm install",
+    "server": "cd dupsjay-backend && npm run dev",
+    "client": "cd dupsjay-frontend && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}

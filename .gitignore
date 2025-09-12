@@ -1,0 +1,9 @@
+node_modules
+client/.idea
+client/.vscode
+client/node_modules
+
+server/.idea
+server/.vscode
+server/node_modules
+server/.env
