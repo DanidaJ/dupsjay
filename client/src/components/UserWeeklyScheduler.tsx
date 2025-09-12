@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { isToday, isBeforeToday, matchesDayInCurrentWeek, toISTDate } from '../utils/istTime';
+import { isToday, isBeforeToday } from '../utils/istTime';
 
 interface Scan {
   _id: string;
