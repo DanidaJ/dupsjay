@@ -89,7 +89,7 @@ const UserBookingManager: React.FC = () => {
     try {
       const token = getToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const resp = await axios.get('http://localhost:5000/api/scans/types', { headers });
+      const resp = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/types`, { headers });
       setScanTypes(resp.data.data || []);
     } catch (err: any) {
       console.error('Error fetching scan types:', err);
@@ -123,7 +123,7 @@ const UserBookingManager: React.FC = () => {
 
       // Send Authorization header only when token is present. Allow public access otherwise.
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.get(`http://localhost:5000/api/scans/week/${weekStart.toISOString().split('T')[0]}`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/week/${weekStart.toISOString().split('T')[0]}`, {
         headers
       });
       
@@ -268,7 +268,7 @@ const UserBookingManager: React.FC = () => {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       // TODO: Replace with actual booking endpoint when it's implemented
-      await axios.post(`http://localhost:5000/api/scans/${selectedSlot.scanId}/book`, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/scans/${selectedSlot.scanId}/book`, {
         patientName: bookingData.patientName,
         patientPhone: bookingData.patientPhone,
         notes: bookingData.notes,

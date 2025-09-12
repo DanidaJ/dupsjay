@@ -49,7 +49,7 @@ const AdminBookingDetails: React.FC<AdminBookingDetailsProps> = ({
     setLoading(true);
     try {
       const token = getToken();
-      const response = await axios.get(`http://localhost:5000/api/scans/${scanId}/bookings`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/${scanId}/bookings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

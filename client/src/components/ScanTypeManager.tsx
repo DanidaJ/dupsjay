@@ -40,7 +40,7 @@ const ScanTypeManager: React.FC<ScanTypeManagerProps> = ({
     setLoading(true);
     try {
       const token = getToken();
-      const response = await axios.get('http://localhost:5000/api/scans/scan-types', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setScanTypes(response.data.data || []);
@@ -70,13 +70,13 @@ const ScanTypeManager: React.FC<ScanTypeManagerProps> = ({
       
       if (editingId) {
         // Update existing scan type
-        await axios.put(`http://localhost:5000/api/scans/scan-types/${editingId}`, formData, {
+        await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types/${editingId}`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         addToast({ message: 'Scan type updated successfully', type: 'success' });
       } else {
         // Create new scan type
-        await axios.post('http://localhost:5000/api/scans/scan-types', formData, {
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types`, formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
         addToast({ message: 'Scan type created successfully', type: 'success' });
@@ -107,7 +107,7 @@ const ScanTypeManager: React.FC<ScanTypeManagerProps> = ({
     if (window.confirm('Are you sure you want to delete this scan type? This action cannot be undone.')) {
       try {
         const token = getToken();
-        await axios.delete(`http://localhost:5000/api/scans/scan-types/${id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         addToast({ message: 'Scan type deleted successfully', type: 'success' });

@@ -49,7 +49,7 @@ const ScanModal: React.FC<ScanModalProps> = ({
     setLoading(true);
     try {
       const token = getToken();
-      const response = await axios.get('http://localhost:5000/api/scans/scan-types', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setScanTypeDetails(response.data.data || []);

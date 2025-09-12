@@ -83,7 +83,7 @@ const AdminScanManager: React.FC = () => {
       const token = getToken();
       console.log('Fetching scan types with token:', token ? 'Token present' : 'No token');
       
-      const response = await axios.get('http://localhost:5000/api/scans/types', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/types`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -111,7 +111,7 @@ const AdminScanManager: React.FC = () => {
       
       console.log('Fetching weekly scans for week starting:', weekStart.toISOString().split('T')[0]);
       
-      const response = await axios.get(`http://localhost:5000/api/scans/week/${weekStart.toISOString().split('T')[0]}`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/week/${weekStart.toISOString().split('T')[0]}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -185,7 +185,7 @@ const AdminScanManager: React.FC = () => {
       const token = getToken();
       console.log('Creating scan with data:', scanData);
       
-      await axios.post('http://localhost:5000/api/scans', scanData, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/scans`, scanData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       addToast({ message: 'Scan scheduled successfully', type: 'success' });
@@ -202,7 +202,7 @@ const AdminScanManager: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this scan?')) {
       try {
         const token = getToken();
-        await axios.delete(`http://localhost:5000/api/scans/${scanId}`, {
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/scans/${scanId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         addToast({ message: 'Scan deleted successfully', type: 'success' });
