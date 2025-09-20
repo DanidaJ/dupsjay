@@ -15,9 +15,6 @@ const Hero = () => {
             <Link to="/book" className="px-8 py-3 text-lg font-medium rounded-md bg-white text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-md">
               Book an Appointment
             </Link>
-            <button className="px-8 py-3 text-lg font-medium rounded-md bg-transparent border-2 border-white text-white hover:bg-white hover:bg-opacity-10 transition-colors duration-200">
-              Learn More
-            </button>
           </div>
         </div>
       </div>

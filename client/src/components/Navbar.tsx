@@ -29,16 +29,7 @@ const Navbar = () => {
               }>
                 Book
               </NavLink>
-              <NavLink to="/about" className={({ isActive }) =>
-                `px-3 pt-5 pb-3 transition-colors duration-200 ${isActive ? 'text-blue-800 font-medium border-b-2 border-blue-500' : 'text-gray-500 hover:text-blue-800 hover:border-b-2 hover:border-blue-500'}`
-              }>
-                About
-              </NavLink>
-              <NavLink to="/contact" className={({ isActive }) =>
-                `px-3 pt-5 pb-3 transition-colors duration-200 ${isActive ? 'text-blue-800 font-medium border-b-2 border-blue-500' : 'text-gray-500 hover:text-blue-800 hover:border-b-2 hover:border-blue-500'}`
-              }>
-                Contact
-              </NavLink>
+              
             </div>
           </div>
 

@@ -73,13 +73,15 @@ interface UserWeeklySchedulerProps {
   onSlotSelect: (slot: SlotInfo) => void;
   onBookedSlotClick?: (scan: Scan, slotNumber: number) => void;
   scanTypes?: string[];
+  selectedScanType?: string;
 }
 
 const UserWeeklyScheduler: React.FC<UserWeeklySchedulerProps> = ({
   weeklyScans,
   currentWeek,
   onSlotSelect,
-  scanTypes = []
+  scanTypes = [],
+  selectedScanType = ''
 }) => {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
@@ -206,8 +208,21 @@ const UserWeeklyScheduler: React.FC<UserWeeklySchedulerProps> = ({
           <div className="text-gray-500">Loading schedule...</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 p-6">
-          {days.map(day => {
+        <div className={`grid gap-4 p-6 ${
+          selectedScanType 
+            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7'
+        }`}>
+          {days
+            .filter(day => {
+              // If no scan type is selected, show all days
+              if (!selectedScanType) return true;
+              
+              // If a scan type is selected, only show days that have scans for that type
+              const dayScans = weeklyScans[day] || [];
+              return dayScans.length > 0; // The filtering by scan type is already done in UserBookingManager
+            })
+            .map(day => {
             const dayScans = weeklyScans[day] || [];
             const dayDate = getDateForDay(day, currentWeek);
             const isDayToday = isToday(dayDate);

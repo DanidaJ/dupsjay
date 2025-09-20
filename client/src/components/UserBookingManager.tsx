@@ -6,6 +6,7 @@ import { getToken } from '../services/authService';
 import UserWeeklyScheduler from './UserWeeklyScheduler';
 import BookingModal from './BookingModal';
 import AdminBookingDetails from './AdminBookingDetails';
+import ChronologicalScanView from './ChronologicalScanView';
 
 interface Scan {
   _id: string;
@@ -79,11 +80,12 @@ const UserBookingManager: React.FC = () => {
   const [showBookingDetails, setShowBookingDetails] = useState(false);
   const [selectedScanForBookings, setSelectedScanForBookings] = useState<Scan | null>(null);
   const [scanTypes, setScanTypes] = useState<string[]>([]);
+  const [selectedScanType, setSelectedScanType] = useState<string>('');
 
   useEffect(() => {
     fetchAvailableScans();
     fetchScanTypes();
-  }, [currentWeek]);
+  }, [currentWeek, selectedScanType]);
 
   const fetchScanTypes = async () => {
     try {
@@ -153,57 +155,27 @@ const UserBookingManager: React.FC = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       console.log('Today for filtering:', today.toISOString().split('T')[0]);
+      console.log('Selected scan type for filtering:', selectedScanType);
+      
+      const filterScans = (scans: Scan[]) => {
+        return scans.filter((scan: Scan) => {
+          const scanDate = new Date(scan.date);
+          const isToday = scanDate >= today;
+          const hasSlots = scan.availableSlots > 0;
+          const matchesScanType = !selectedScanType || scan.scanType === selectedScanType;
+          console.log(`Scan filter - Type: ${scan.scanType}, Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, matchesType: ${matchesScanType}`);
+          return isToday && hasSlots && matchesScanType;
+        });
+      };
       
       const filteredScans = {
-        Monday: (scansData.Monday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Monday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        }),
-        Tuesday: (scansData.Tuesday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Tuesday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        }),
-        Wednesday: (scansData.Wednesday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Wednesday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        }),
-        Thursday: (scansData.Thursday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Thursday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        }),
-        Friday: (scansData.Friday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Friday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        }),
-        Saturday: (scansData.Saturday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Saturday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        }),
-        Sunday: (scansData.Sunday || []).filter((scan: Scan) => {
-          const scanDate = new Date(scan.date);
-          const isToday = scanDate >= today;
-          const hasSlots = scan.availableSlots > 0;
-          console.log(`Sunday scan filter - Date: ${scan.date}, isToday: ${isToday}, hasSlots: ${hasSlots}, availableSlots: ${scan.availableSlots}`);
-          return isToday && hasSlots;
-        })
+        Monday: filterScans(scansData.Monday || []),
+        Tuesday: filterScans(scansData.Tuesday || []),
+        Wednesday: filterScans(scansData.Wednesday || []),
+        Thursday: filterScans(scansData.Thursday || []),
+        Friday: filterScans(scansData.Friday || []),
+        Saturday: filterScans(scansData.Saturday || []),
+        Sunday: filterScans(scansData.Sunday || [])
       };
       
       console.log('Filtered scans result:', filteredScans);
@@ -224,7 +196,7 @@ const UserBookingManager: React.FC = () => {
     }
   };
 
-  // Accepts a per-slot info object created in UserWeeklyScheduler
+  // Accepts a per-slot info object created in UserWeeklyScheduler or ScanTypeCalendar
   const handleSlotSelect = (slot: any) => {
     // If admin user and slot is booked, show booking details
     if (currentUser?.role === 'admin' && slot.isBooked && slot.bookingDetails) {
@@ -322,45 +294,80 @@ const UserBookingManager: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Week Navigation */}
-      <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm">
-        <button
-          onClick={() => navigateWeek('prev')}
-          className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+      {/* Scan Type Selection */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+        <label htmlFor="scanType" className="block text-sm font-medium text-gray-700 mb-2">
+          Select Scan Type
+        </label>
+        <select
+          id="scanType"
+          value={selectedScanType}
+          onChange={(e) => setSelectedScanType(e.target.value)}
+          className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <span className="mr-2">←</span>
-          Previous Week
-        </button>
-        
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {getWeekDateRange()}
-          </h2>
-          <p className="text-sm text-gray-500">Available Appointments</p>
-        </div>
-        
-        <button
-          onClick={() => navigateWeek('next')}
-          className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          Next Week
-          <span className="ml-2">→</span>
-        </button>
+          <option value="">Show All Scan Types</option>
+          {scanTypes.map((type) => (
+            <option key={type} value={type}>
+              {type} only
+            </option>
+          ))}
+        </select>
+        {selectedScanType && (
+          <p className="mt-2 text-sm text-blue-600">
+            Showing only dates with available {selectedScanType} scan slots
+          </p>
+        )}
       </div>
 
-      {/* Loading State */}
+      {/* Content Area */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">Loading available appointments...</span>
         </div>
-      ) : (
-        <UserWeeklyScheduler
-          weeklyScans={weeklyScans}
-          currentWeek={currentWeek}
+      ) : selectedScanType ? (
+        // Show chronological view for specific scan type
+        <ChronologicalScanView
+          selectedScanType={selectedScanType}
           onSlotSelect={handleSlotSelect}
-          scanTypes={scanTypes}
         />
+      ) : (
+        // Show weekly view when no scan type is selected (default)
+        <>
+          {/* Week Navigation */}
+          <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm">
+            <button
+              onClick={() => navigateWeek('prev')}
+              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <span className="mr-2">←</span>
+              Previous Week
+            </button>
+            
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {getWeekDateRange()}
+              </h2>
+              <p className="text-sm text-gray-500">Available Appointments</p>
+            </div>
+            
+            <button
+              onClick={() => navigateWeek('next')}
+              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              Next Week
+              <span className="ml-2">→</span>
+            </button>
+          </div>
+
+          <UserWeeklyScheduler
+            weeklyScans={weeklyScans}
+            currentWeek={currentWeek}
+            onSlotSelect={handleSlotSelect}
+            scanTypes={scanTypes}
+            selectedScanType={selectedScanType}
+          />
+        </>
       )}
 
       {/* Booking Modal */}

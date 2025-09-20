@@ -373,6 +373,127 @@ exports.deleteScan = async (req, res) => {
   }
 };
 
+// @desc    Get available dates for a specific scan type
+// @route   GET /api/scans/available-dates/:scanType
+// @access  Public
+exports.getAvailableDatesForScanType = async (req, res) => {
+  try {
+    const { scanType } = req.params;
+    const { fromDate } = req.query;
+    
+    // Set default from date to today if not provided
+    const startDate = fromDate ? new Date(fromDate) : new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    // Get scans for the next 3 months to provide good range
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 3);
+    endDate.setHours(23, 59, 59, 999);
+
+    console.log(`=== AVAILABLE DATES DEBUG for ${scanType} ===`);
+    console.log('Start date:', startDate.toISOString());
+    console.log('End date:', endDate.toISOString());
+
+    // Find all scans for this scan type in the date range
+    const scans = await Scan.find({
+      scanType: scanType,
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).sort({ date: 1, startTime: 1 });
+
+    // Get bookings for these scans
+    const scanIds = scans.map(scan => scan._id);
+    const bookings = await Booking.find({
+      scanId: { $in: scanIds },
+      bookingStatus: 'confirmed'
+    });
+
+    // Group bookings by scanId
+    const bookingsByScan = {};
+    bookings.forEach(booking => {
+      const scanId = booking.scanId.toString();
+      if (!bookingsByScan[scanId]) {
+        bookingsByScan[scanId] = [];
+      }
+      bookingsByScan[scanId].push(booking);
+    });
+
+    // Process scans to get available dates
+    const availableDates = [];
+    const dateMap = new Map(); // To avoid duplicate dates
+
+    scans.forEach(scan => {
+      const scanId = scan._id.toString();
+      const scanBookings = bookingsByScan[scanId] || [];
+      const availableSlots = scan.totalSlots - scanBookings.length;
+      
+      if (availableSlots > 0) {
+        const dateKey = scan.date.toISOString().split('T')[0];
+        
+        if (!dateMap.has(dateKey)) {
+          const dayName = scan.date.toLocaleDateString('en-US', { weekday: 'long' });
+          const formattedDate = scan.date.toLocaleDateString('en-US', { 
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          });
+          
+          dateMap.set(dateKey, {
+            date: dateKey,
+            displayDate: formattedDate,
+            dayName: dayName,
+            totalAvailableSlots: availableSlots,
+            scans: [{
+              _id: scan._id,
+              startTime: scan.startTime,
+              endTime: scan.endTime,
+              availableSlots: availableSlots,
+              totalSlots: scan.totalSlots
+            }]
+          });
+        } else {
+          // Add this scan to existing date entry
+          const existing = dateMap.get(dateKey);
+          existing.totalAvailableSlots += availableSlots;
+          existing.scans.push({
+            _id: scan._id,
+            startTime: scan.startTime,
+            endTime: scan.endTime,
+            availableSlots: availableSlots,
+            totalSlots: scan.totalSlots
+          });
+        }
+      }
+    });
+
+    // Convert map to array and sort by date
+    const sortedDates = Array.from(dateMap.values()).sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    console.log(`Found ${sortedDates.length} available dates for ${scanType}`);
+    console.log('Available dates:', sortedDates.map(d => d.date));
+    console.log('===============================');
+
+    res.status(200).json({
+      success: true,
+      scanType: scanType,
+      fromDate: startDate.toISOString().split('T')[0],
+      toDate: endDate.toISOString().split('T')[0],
+      data: sortedDates
+    });
+  } catch (err) {
+    console.error('Error fetching available dates:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
 // @desc    Get scan types
 // @route   GET /api/scans/types
 // @access  Private
