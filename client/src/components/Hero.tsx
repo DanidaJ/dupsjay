@@ -1,6 +1,24 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 const Hero = () => {
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const { addToast } = useToast();
+
+  const handleBookAppointment = () => {
+    if (!isLoggedIn) {
+      addToast({
+        type: 'info',
+        message: 'Please log in to book an appointment'
+      });
+      navigate('/login');
+    } else {
+      navigate('/book');
+    }
+  };
+
   return (
     <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
@@ -12,9 +30,18 @@ const Hero = () => {
             Book, manage, and track your appointments all in one place. Simple, fast, and convenient.
           </p>
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <Link to="/book" className="px-8 py-3 text-lg font-medium rounded-md bg-white text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-md">
-              Book an Appointment
-            </Link>
+            {isLoggedIn ? (
+              <Link to="/book" className="px-8 py-3 text-lg font-medium rounded-md bg-white text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-md">
+                Book an Appointment
+              </Link>
+            ) : (
+              <button 
+                onClick={handleBookAppointment}
+                className="px-8 py-3 text-lg font-medium rounded-md bg-white text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-md"
+              >
+                Book an Appointment
+              </button>
+            )}
           </div>
         </div>
       </div>

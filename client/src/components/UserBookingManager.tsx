@@ -63,7 +63,7 @@ interface SelectedSlot {
 
 const UserBookingManager: React.FC = () => {
   const { addToast } = useToast();
-  const { currentUser } = useAuth();
+  const { currentUser, hasRole } = useAuth();
   const [weeklyScans, setWeeklyScans] = useState<WeeklyScans>({
     Monday: [],
     Tuesday: [],
@@ -95,6 +95,8 @@ const UserBookingManager: React.FC = () => {
       setScanTypes(resp.data.data || []);
     } catch (err: any) {
       console.error('Error fetching scan types:', err);
+      // Set empty array as fallback so the dropdown still shows with "Show All Scan Types" option
+      setScanTypes([]);
     }
   };
 
@@ -199,7 +201,7 @@ const UserBookingManager: React.FC = () => {
   // Accepts a per-slot info object created in UserWeeklyScheduler or ScanTypeCalendar
   const handleSlotSelect = (slot: any) => {
     // If admin user and slot is booked, show booking details
-    if (currentUser?.role === 'admin' && slot.isBooked && slot.bookingDetails) {
+    if (hasRole('admin') && slot.isBooked && slot.bookingDetails) {
       // Find the scan that contains this slot
       const allScans = Object.values(weeklyScans).flat();
       const scan = allScans.find(s => s._id === slot.scanId);

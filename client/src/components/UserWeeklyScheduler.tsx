@@ -83,8 +83,8 @@ const UserWeeklyScheduler: React.FC<UserWeeklySchedulerProps> = ({
   scanTypes = [],
   selectedScanType = ''
 }) => {
-  const { currentUser } = useAuth();
-  const isAdmin = currentUser?.role === 'admin';
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole('admin');
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   // Helper function to get the date for each day

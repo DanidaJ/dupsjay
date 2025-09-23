@@ -12,6 +12,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import Navbar from './components/Navbar'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { AdminProtectedRoute } from './components/AdminProtectedRoute'
 
 function App() {
   return (
@@ -29,6 +30,10 @@ function App() {
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+
+            {/* Admin-Only Protected Routes */}
+            <Route element={<AdminProtectedRoute />}>
               <Route path="/admin/scans" element={<AdminScanPage />} />
               <Route path="/admin/make-admins" element={<SignInPage />} />
             </Route>

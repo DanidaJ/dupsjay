@@ -23,8 +23,8 @@ const { adminOnly, bookerOnly } = require('../middleware/roleAuth');
 
 const router = express.Router();
 
-// Scan types route (accessible to all authenticated users)
-router.get('/types', protectWithFallback, getScanTypes);
+// Scan types route (accessible to all users - no authentication required)
+router.get('/types', getScanTypes);
 
 // User booking routes
 // Allow anonymous booking and viewing of weekly scans so public users can

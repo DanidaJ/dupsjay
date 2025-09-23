@@ -3,10 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import AdminScanManager from '../components/AdminScanManager';
 
 const AdminScanPage: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { hasRole } = useAuth();
 
-  // Check if user is admin
-  if (!currentUser || currentUser.role !== 'admin') {
+  // Check if user has admin role using Keycloak
+  if (!hasRole('admin')) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
