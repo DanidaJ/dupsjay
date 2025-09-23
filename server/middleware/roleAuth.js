@@ -1,10 +1,16 @@
 // Grant access to specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    // Check if user has roles array (Keycloak) or single role (legacy)
+    const userRoles = req.user.roles || [req.user.role];
+    
+    // Check if any of the user's roles match the required roles
+    const hasPermission = roles.some(role => userRoles.includes(role));
+    
+    if (!hasPermission) {
       return res.status(403).json({
         success: false,
-        message: `User role ${req.user.role} is not authorized to access this resource`
+        message: `User roles [${userRoles.join(', ')}] are not authorized to access this resource`
       });
     }
     next();
@@ -13,7 +19,9 @@ exports.authorize = (...roles) => {
 
 // Check if user is admin
 exports.adminOnly = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+  const userRoles = req.user.roles || [req.user.role];
+  
+  if (!userRoles.includes('admin')) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. Admin privileges required.'
@@ -22,9 +30,24 @@ exports.adminOnly = (req, res, next) => {
   next();
 };
 
-// Check if user is regular user
+// Check if user is booker or user
+exports.bookerOnly = (req, res, next) => {
+  const userRoles = req.user.roles || [req.user.role];
+  
+  if (!userRoles.includes('booker') && !userRoles.includes('user')) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Booker privileges required.'
+    });
+  }
+  next();
+};
+
+// Check if user is regular user (legacy support)
 exports.userOnly = (req, res, next) => {
-  if (req.user.role !== 'user') {
+  const userRoles = req.user.roles || [req.user.role];
+  
+  if (!userRoles.includes('user') && !userRoles.includes('booker')) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. User privileges required.'

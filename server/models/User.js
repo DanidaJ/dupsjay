@@ -9,6 +9,23 @@ const UserSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Name cannot be more than 50 characters']
   },
+  username: {
+    type: String,
+    trim: true,
+    maxlength: [30, 'Username cannot be more than 30 characters'],
+    unique: true,
+    sparse: true // Allow null values but ensure uniqueness when present
+  },
+  firstName: {
+    type: String,
+    trim: true,
+    maxlength: [25, 'First name cannot be more than 25 characters']
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    maxlength: [25, 'Last name cannot be more than 25 characters']
+  },
   email: {
     type: String,
     required: [true, 'Please add an email'],
@@ -26,8 +43,16 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'booker'],
     default: 'user'
+  },
+  keycloakSync: {
+    type: Boolean,
+    default: false
+  },
+  keycloakId: {
+    type: String,
+    sparse: true // Allow null values but ensure uniqueness when present
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,

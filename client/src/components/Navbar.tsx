@@ -5,10 +5,10 @@ import { useToast } from '../contexts/ToastContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { currentUser, isLoggedIn, logout } = useAuth();
+  const { currentUser, isLoggedIn, logout, hasRole } = useAuth();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const firstName = currentUser?.name ? currentUser.name.split(' ')[0] : currentUser?.email?.split('@')[0];
+  const firstName = currentUser?.firstName || currentUser?.name?.split(' ')[0] || currentUser?.username;
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -43,7 +43,7 @@ const Navbar = () => {
                 <NavLink to="/book" className={({ isActive }) => `ml-4 px-3 py-1 rounded ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-800'}`}>
                   Book
                 </NavLink>
-                {currentUser?.role === 'admin' && (
+                {hasRole('admin') && (
                   <>
                     <NavLink to="/admin/scans" className={({ isActive }) => `ml-4 px-3 py-1 rounded ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-700'}`}>
                       Scans
@@ -54,13 +54,20 @@ const Navbar = () => {
                   </>
                 )}
                 <button 
-                  onClick={() => {
-                    logout();
-                    addToast({
-                      type: 'info',
-                      message: 'You have been logged out successfully'
-                    });
-                    navigate('/');
+                  onClick={async () => {
+                    try {
+                      await logout();
+                      addToast({
+                        type: 'info',
+                        message: 'You have been logged out successfully'
+                      });
+                      navigate('/');
+                    } catch (error) {
+                      addToast({
+                        type: 'error',
+                        message: 'Logout failed'
+                      });
+                    }
                   }}
                   className="ml-4 px-3 py-1 rounded bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors duration-200"
                 >
@@ -71,6 +78,9 @@ const Navbar = () => {
               <>
                 <NavLink to="/login" className={({ isActive }) => `ml-6 px-3 py-1 rounded text-gray-700 hover:text-blue-800 ${isActive ? 'text-blue-800 font-medium' : ''}`}>
                   Log In
+                </NavLink>
+                <NavLink to="/signup" className={({ isActive }) => `ml-4 px-3 py-1 rounded ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'} transition-colors duration-200`}>
+                  Sign Up
                 </NavLink>
                 <NavLink to="/book" className={({ isActive }) => `ml-4 px-3 py-1 rounded ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-800'}`}>
                   Book
@@ -123,7 +133,7 @@ const Navbar = () => {
                 <NavLink to="/book" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-800'}`}>
                   Book
                 </NavLink>
-                {currentUser?.role === 'admin' && (
+                {hasRole('admin') && (
                   <>
                     <NavLink to="/admin/scans" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-700'}`}>
                       Scans
@@ -134,14 +144,21 @@ const Navbar = () => {
                   </>
                 )}
                 <button 
-                  onClick={() => {
-                    logout();
-                    addToast({
-                      type: 'info',
-                      message: 'You have been logged out successfully'
-                    });
-                    setIsMenuOpen(false);
-                    navigate('/');
+                  onClick={async () => {
+                    try {
+                      await logout();
+                      addToast({
+                        type: 'info',
+                        message: 'You have been logged out successfully'
+                      });
+                      setIsMenuOpen(false);
+                      navigate('/');
+                    } catch (error) {
+                      addToast({
+                        type: 'error',
+                        message: 'Logout failed'
+                      });
+                    }
                   }}
                   className="px-4 py-2 rounded bg-white border border-blue-600 text-blue-600 text-center"
                 >
@@ -152,6 +169,13 @@ const Navbar = () => {
               <>
                 <NavLink to="/login" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'text-blue-800 font-medium' : 'text-gray-700 hover:text-blue-800'}`}>
                   Log In
+                </NavLink>
+                <NavLink 
+                  to="/signup" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
+                >
+                  Sign Up
                 </NavLink>
                 <NavLink to="/book" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-800'}`}>
                   Book

@@ -1,41 +1,49 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../services/authService';
 import { useAuth } from '../contexts/AuthContext';
-import type { UserData } from '../services/authService';
 import Spinner from '../components/Spinner';
 import { useToast } from '../contexts/ToastContext';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');  const [error, setError] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const { refreshUser } = useAuth();
+  const { login, refreshUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      setLoading(true);      setError('');
-        const userData: UserData = { email, password };
-      await login(userData);
+      setLoading(true);
+      setError('');
+      
+      const result = await login(username, password);
+      
+      if (result.success) {
+        // Refresh auth context so UI updates immediately
+        try {
+          await refreshUser();
+        } catch (refreshErr) {
+          // ignore refresh errors - user is still logged in via token
+        }
 
-      // Refresh auth context so UI updates immediately
-      try {
-        await refreshUser();
-      } catch (refreshErr) {
-        // ignore refresh errors - user is still logged in via token
+        // Show success message
+        addToast({
+          type: 'success',
+          message: 'Login successful! Welcome back.'
+        });
+
+        // Redirect to home page after successful login
+        navigate('/');
+      } else {
+        setError(result.message || 'Login failed');
+        addToast({
+          type: 'error',
+          message: result.message || 'Login failed'
+        });
       }
-
-      // Show success message
-      addToast({
-        type: 'success',
-        message: 'Login successful! Welcome back.'
-      });
-
-      // Redirect to home page after successful login
-      navigate('/');
     } catch (err: any) {
       const errorMessage = err.message || 'Login failed';
       setError(errorMessage);
@@ -55,26 +63,27 @@ const LoginPage = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Log in to your account</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <Link to="/signin" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
               create a new account
             </Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="username" className="sr-only">
+                Username
               </label>
               <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div>
