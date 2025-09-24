@@ -15,8 +15,7 @@ const scanTypeSchema = new mongoose.Schema({
     max: 300 // Maximum 5 hours
   },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String, // Keycloak UUID string instead of MongoDB ObjectId  
     required: true
   },
   createdAt: {

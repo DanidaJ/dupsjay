@@ -50,7 +50,8 @@ app.use((req, res, next) => {
 });
 
 // Define routes
-app.use('/api/auth', require('./routes/auth'));
+// Legacy auth routes disabled - using Keycloak only
+// app.use('/api/auth', require('./routes/auth'));
 app.use('/api/scans', require('./routes/scan'));
 
 // Default route

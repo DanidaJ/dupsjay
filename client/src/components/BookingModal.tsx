@@ -17,6 +17,8 @@ interface BookingModalProps {
     patientName: string;
     patientPhone: string;
     notes?: string;
+    bookerName?: string;
+    bookerUserId?: string;
   }) => void;
   onClose: () => void;
 }
@@ -28,7 +30,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
-    patientName: currentUser?.name || '',
+    patientName: '',
     patientPhone: '',
     notes: ''
   });
@@ -64,7 +66,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
       await onSubmit({
         patientName: formData.patientName.trim(),
         patientPhone: formData.patientPhone.trim(),
-        notes: formData.notes.trim() || undefined
+        notes: formData.notes.trim() || undefined,
+        bookerName: currentUser?.name || 'Anonymous User',
+        bookerUserId: currentUser?.id
       });
     } catch (error) {
       console.error('Error submitting booking:', error);
@@ -145,6 +149,22 @@ const BookingModal: React.FC<BookingModalProps> = ({
         {/* Booking Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
+            {/* Booker (Non-editable) */}
+            <div>
+              <label htmlFor="bookerName" className="block text-sm font-medium text-gray-700 mb-1">
+                Booked By
+              </label>
+              <input
+                type="text"
+                id="bookerName"
+                name="bookerName"
+                value={currentUser?.name || 'Anonymous User'}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+              />
+              <p className="mt-1 text-xs text-gray-500">This is the person making the booking</p>
+            </div>
+
             {/* Patient Name */}
             <div>
               <label htmlFor="patientName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -159,7 +179,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.patientName ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Enter patient full name"
+                placeholder="Enter the patient's full name"
               />
               {errors.patientName && (
                 <p className="mt-1 text-sm text-red-600">{errors.patientName}</p>

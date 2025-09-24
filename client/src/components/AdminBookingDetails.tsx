@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../contexts/ToastContext';
-import { getToken } from '../services/authService';
+import keycloakService from '../services/keycloakService';
 
 interface BookingDetail {
   _id: string;
@@ -13,6 +13,8 @@ interface BookingDetail {
   bookedAt: string;
   notes?: string;
   isAnonymous: boolean;
+  bookerName?: string;
+  bookerUserId?: string;
   userId?: {
     _id: string;
     name: string;
@@ -48,7 +50,7 @@ const AdminBookingDetails: React.FC<AdminBookingDetailsProps> = ({
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/${scanId}/bookings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -147,6 +149,7 @@ const AdminBookingDetails: React.FC<AdminBookingDetailsProps> = ({
                         <h5 className="font-medium text-gray-700 mb-2">Booking Info</h5>
                         <div className="text-sm text-gray-600 space-y-1">
                           <div><strong>Booked:</strong> {formatDateTime(booking.bookedAt)}</div>
+                          <div><strong>Booked By:</strong> {booking.bookerName || 'Anonymous User'}</div>
                           <div>
                             <strong>Type:</strong>{' '}
                             <span className={`px-2 py-1 rounded-full text-xs ${

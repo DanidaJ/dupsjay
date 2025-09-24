@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../contexts/ToastContext';
-import { getToken } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import keycloakService from '../services/keycloakService';
 import WeeklyScheduler from './WeeklyScheduler';
 import ScanModal from './ScanModal';
 import ScanTypeManager from './ScanTypeManager';
@@ -51,6 +52,7 @@ interface WeeklyScans {
 
 const AdminScanManager: React.FC = () => {
   const { addToast } = useToast();
+  const { currentUser } = useAuth();
   const [weeklyScans, setWeeklyScans] = useState<WeeklyScans>({
     Monday: [],
     Tuesday: [],
@@ -72,15 +74,17 @@ const AdminScanManager: React.FC = () => {
     date: string;
   } | null>(null);
   const [scanTypes, setScanTypes] = useState<string[]>([]);
+  const [scanTypeDetails, setScanTypeDetails] = useState<Array<{_id: string; name: string; duration: number}>>([]);
 
   useEffect(() => {
     fetchScanTypes();
+    fetchScanTypeDetails();
     fetchWeeklyScans();
   }, [currentWeek]);
 
   const fetchScanTypes = async () => {
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       console.log('Fetching scan types with token:', token ? 'Token present' : 'No token');
       
       const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/types`, {
@@ -96,10 +100,38 @@ const AdminScanManager: React.FC = () => {
     }
   };
 
+  const fetchScanTypeDetails = async () => {
+    try {
+      const token = keycloakService.getToken();
+      console.log('=== CLIENT DEBUG INFO ===');
+      console.log('Current user:', currentUser);
+      console.log('Token present:', !!token);
+      console.log('Token (first 50 chars):', token ? token.substring(0, 50) + '...' : 'None');
+      console.log('Is Keycloak authenticated:', keycloakService.isAuthenticated());
+      console.log('=== END CLIENT DEBUG INFO ===');
+      
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('Detailed scan types response:', response.data);
+      setScanTypeDetails(response.data.data || []);
+    } catch (error: any) {
+      console.error('Error fetching detailed scan types:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: error.message
+      });
+      // Don't show toast error for this since scanTypes is the main one
+    }
+  };
+
   const fetchWeeklyScans = async () => {
     setLoading(true);
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       const weekStart = getWeekStart(currentWeek);
       
       // Debug logging
@@ -182,7 +214,7 @@ const AdminScanManager: React.FC = () => {
 
   const handleScanCreate = async (scanData: any) => {
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       console.log('Creating scan with data:', scanData);
       
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/scans`, scanData, {
@@ -201,7 +233,7 @@ const AdminScanManager: React.FC = () => {
   const handleScanDelete = async (scanId: string) => {
     if (window.confirm('Are you sure you want to delete this scan?')) {
       try {
-        const token = getToken();
+        const token = keycloakService.getToken();
         await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/scans/${scanId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -294,6 +326,7 @@ const AdminScanManager: React.FC = () => {
           onClose={() => setShowModal(false)}
           onSubmit={handleScanCreate}
           scanTypes={scanTypes}
+          scanTypeDetails={scanTypeDetails}
           selectedSlot={selectedTimeSlot}
         />
       )}
@@ -302,7 +335,10 @@ const AdminScanManager: React.FC = () => {
         <ScanTypeManager
           isOpen={showScanTypeManager}
           onClose={() => setShowScanTypeManager(false)}
-          onScanTypesUpdated={fetchScanTypes}
+          onScanTypesUpdated={() => {
+            fetchScanTypes();
+            fetchScanTypeDetails();
+          }}
         />
       )}
 

@@ -10,13 +10,17 @@ let publicKeysExpiry = null;
 const fetchKeycloakPublicKeys = async () => {
   try {
     const url = `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/certs`;
+    console.log('Fetching public keys from URL:', url);
     const response = await fetch(url);
     
     if (!response.ok) {
+      console.log('Public key fetch failed - Status:', response.status, response.statusText);
       throw new Error('Failed to fetch Keycloak public keys');
     }
     
     const data = await response.json();
+    console.log('Public keys fetched successfully. Key count:', data.keys?.length);
+    console.log('First key preview:', data.keys?.[0] ? { kid: data.keys[0].kid, alg: data.keys[0].alg } : 'No keys');
     
     // Cache the keys for 1 hour
     publicKeys = data.keys;
@@ -43,6 +47,7 @@ const verifyKeycloakToken = async (token) => {
   try {
     // Decode token header to get the kid (key id)
     const decodedHeader = jwt.decode(token, { complete: true });
+    console.log('Token header:', decodedHeader?.header);
     if (!decodedHeader || !decodedHeader.header.kid) {
       throw new Error('Invalid token format');
     }
@@ -50,6 +55,8 @@ const verifyKeycloakToken = async (token) => {
     // Get public keys from Keycloak
     const keys = await getKeycloakPublicKeys();
     const key = keys.find(k => k.kid === decodedHeader.header.kid);
+    console.log('Looking for key ID:', decodedHeader.header.kid);
+    console.log('Available key IDs:', keys.map(k => k.kid));
     
     if (!key) {
       throw new Error('Public key not found');
@@ -57,16 +64,55 @@ const verifyKeycloakToken = async (token) => {
     
     // Convert JWK to PEM format
     const publicKey = jwkToPem(key);
-    
-    // Verify token
-    const decoded = jwt.verify(token, publicKey, {
+    console.log('Token verification will try both audiences:', {
       algorithms: ['RS256'],
-      audience: process.env.KEYCLOAK_CLIENT_ID,
+      primaryAudience: process.env.KEYCLOAK_CLIENT_ID,
+      fallbackAudience: 'account',
       issuer: `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}`
     });
     
+    // First decode without verification to see the token claims
+    const payload = jwt.decode(token);
+    console.log('Token payload audience:', payload?.aud);
+    console.log('Expected audiences:', [process.env.KEYCLOAK_CLIENT_ID, 'account']);
+    console.log('Token issuer:', payload?.iss);
+    console.log('Expected issuer:', `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}`);
+    
+    // Try both possible audiences: client ID first, then 'account' (Keycloak default)
+    let decoded;
+    let audienceUsed = '';
+    
+    try {
+      // First try with client ID (this is the proper way)
+      decoded = jwt.verify(token, publicKey, {
+        algorithms: ['RS256'],
+        audience: process.env.KEYCLOAK_CLIENT_ID,
+        issuer: `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}`
+      });
+      audienceUsed = `client ID (${process.env.KEYCLOAK_CLIENT_ID})`;
+      console.log('✅ Token verified with client ID as audience - PROPER CONFIGURATION');
+    } catch (clientAudError) {
+      console.log('❌ Client ID audience failed:', clientAudError.message);
+      
+      // If that fails, try with 'account' audience (fallback for misconfigured Keycloak)
+      try {
+        decoded = jwt.verify(token, publicKey, {
+          algorithms: ['RS256'],
+          audience: 'account',
+          issuer: `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}`
+        });
+        audienceUsed = 'account (fallback)';
+        console.log('⚠️  Token verified with "account" as audience - KEYCLOAK NEEDS CONFIGURATION');
+      } catch (accountAudError) {
+        throw new Error(`Token verification failed with both audiences: ${clientAudError.message} | ${accountAudError.message}`);
+      }
+    }
+    
+    console.log(`Token verified successfully using audience: ${audienceUsed}`);
+    
     return decoded;
   } catch (error) {
+    console.log('Token verification error:', error.message);
     throw new Error('Invalid token');
   }
 };
@@ -130,7 +176,13 @@ exports.protectWithFallback = async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
   }
 
+  console.log('=== KEYCLOAK AUTH DEBUG ===');
+  console.log('Request path:', req.path);
+  console.log('Token present:', !!token);
+  console.log('Token preview:', token ? token.substring(0, 50) + '...' : 'None');
+
   if (!token) {
+    console.log('No token provided');
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route'
@@ -140,7 +192,19 @@ exports.protectWithFallback = async (req, res, next) => {
   try {
     // First try Keycloak token verification
     try {
+      console.log('Attempting Keycloak token verification...');
       const decoded = await verifyKeycloakToken(token);
+      console.log('Keycloak token verified successfully');
+      console.log('User info:', {
+        id: decoded.sub,
+        username: decoded.preferred_username,
+        email: decoded.email,
+        roles: [
+          ...(decoded.realm_access?.roles || []),
+          ...(decoded.resource_access?.[process.env.KEYCLOAK_CLIENT_ID]?.roles || [])
+        ]
+      });
+      
       req.user = {
         id: decoded.sub,
         username: decoded.preferred_username,
@@ -153,15 +217,19 @@ exports.protectWithFallback = async (req, res, next) => {
           ...(decoded.resource_access?.[process.env.KEYCLOAK_CLIENT_ID]?.roles || [])
         ]
       };
+      console.log('=== END KEYCLOAK AUTH DEBUG ===');
       return next();
     } catch (keycloakError) {
-      // Fall back to JWT verification for existing users
-      const User = require('../models/User');
-      const jwtDecoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(jwtDecoded.id);
-      return next();
+      console.log('❌ Keycloak authentication failed:', keycloakError.message);
+      console.log('=== END KEYCLOAK AUTH DEBUG ===');
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired Keycloak token'
+      });
     }
   } catch (err) {
+    console.log('Both Keycloak and JWT verification failed:', err.message);
+    console.log('=== END KEYCLOAK AUTH DEBUG ===');
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route'

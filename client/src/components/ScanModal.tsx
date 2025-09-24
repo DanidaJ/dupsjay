@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { getToken } from '../services/authService';
-
-interface ScanType {
-  _id: string;
-  name: string;
-  duration: number;
-}
 
 interface ScanModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (scanData: any) => void;
   scanTypes: string[];
+  scanTypeDetails?: Array<{_id: string; name: string; duration: number}>;
   selectedSlot: {
     day: string;
     time: string;
@@ -25,6 +18,7 @@ const ScanModal: React.FC<ScanModalProps> = ({
   onClose,
   onSubmit,
   scanTypes,
+  scanTypeDetails = [],
   selectedSlot
 }) => {
   const [formData, setFormData] = useState({
@@ -35,30 +29,24 @@ const ScanModal: React.FC<ScanModalProps> = ({
     totalSlots: 1,
     notes: ''
   });
-  const [scanTypeDetails, setScanTypeDetails] = useState<ScanType[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  // Fetch scan type details on component mount
+
+  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      fetchScanTypeDetails();
-    }
-  }, [isOpen]);
-
-  const fetchScanTypeDetails = async () => {
-    setLoading(true);
-    try {
-      const token = getToken();
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types`, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Reset form data with current selectedSlot
+      setFormData({
+        scanType: '',
+        startTime: selectedSlot.time,
+        endTime: '',
+        duration: 0,
+        totalSlots: 1,
+        notes: ''
       });
-      setScanTypeDetails(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching scan type details:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isOpen, selectedSlot]);
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,31 +67,75 @@ const ScanModal: React.FC<ScanModalProps> = ({
       const selectedScanType = scanTypeDetails.find(st => st.name === value);
       const duration = selectedScanType ? selectedScanType.duration : 0;
       
+      console.log('Selected scan type:', value, 'Duration:', duration);
+      
       setFormData(prev => ({
         ...prev,
         [name]: value,
-        duration: duration
+        duration: duration,
+        endTime: '' // Reset end time to trigger recalculation
+      }));
+    } else if (name === 'totalSlots') {
+      const slots = parseInt(value) || 1;
+      setFormData(prev => ({
+        ...prev,
+        [name]: slots,
+        endTime: '' // Reset end time to trigger recalculation
+      }));
+    } else if (name === 'startTime') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        endTime: '' // Reset end time to trigger recalculation
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: (name === 'totalSlots') ? parseInt(value) : value
+        [name]: value
       }));
     }
   };
 
   const calculateEndTime = (startTime: string, duration: number, totalSlots: number) => {
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + (duration * totalSlots);
-    const endHours = Math.floor(totalMinutes / 60);
-    const endMins = totalMinutes % 60;
-    return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+    if (!startTime || duration <= 0 || totalSlots <= 0) {
+      return '';
+    }
+    
+    try {
+      const [hours, minutes] = startTime.split(':').map(Number);
+      if (isNaN(hours) || isNaN(minutes)) {
+        return '';
+      }
+      
+      const totalMinutes = hours * 60 + minutes + (duration * totalSlots);
+      const endHours = Math.floor(totalMinutes / 60) % 24; // Handle overflow past 24 hours
+      const endMins = totalMinutes % 60;
+      
+      return `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+    } catch (error) {
+      console.error('Error calculating end time:', error);
+      return '';
+    }
   };
 
+  // Calculate end time whenever relevant fields change
   React.useEffect(() => {
-    if (formData.startTime && formData.duration && formData.totalSlots) {
+    if (formData.startTime && formData.duration > 0 && formData.totalSlots > 0) {
       const endTime = calculateEndTime(formData.startTime, formData.duration, formData.totalSlots);
-      setFormData(prev => ({ ...prev, endTime }));
+      console.log('Calculating end time:', {
+        startTime: formData.startTime,
+        duration: formData.duration,
+        totalSlots: formData.totalSlots,
+        calculatedEndTime: endTime
+      });
+      
+      // Only update if the calculated end time is different from current
+      if (endTime !== formData.endTime) {
+        setFormData(prev => ({ ...prev, endTime }));
+      }
+    } else if (formData.endTime) {
+      // Clear end time if conditions are not met
+      setFormData(prev => ({ ...prev, endTime: '' }));
     }
   }, [formData.startTime, formData.duration, formData.totalSlots]);
 
@@ -141,7 +173,7 @@ const ScanModal: React.FC<ScanModalProps> = ({
               value={formData.scanType}
               onChange={handleChange}
               required
-              disabled={loading}
+              disabled={false}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Select scan type</option>
@@ -205,6 +237,7 @@ const ScanModal: React.FC<ScanModalProps> = ({
                 name="endTime"
                 value={formData.endTime}
                 readOnly
+                placeholder={formData.duration > 0 && formData.totalSlots > 0 ? "Calculating..." : "--:--"}
                 className="w-full p-2 border border-gray-300 rounded-md bg-gray-50"
               />
               <p className="text-xs text-gray-500 mt-1">

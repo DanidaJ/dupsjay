@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { getToken } from '../services/authService';
+import keycloakService from '../services/keycloakService';
 import { useToast } from '../contexts/ToastContext';
 
 interface AvailableDate {
@@ -45,7 +45,7 @@ const ScanTypeCalendar: React.FC<ScanTypeCalendarProps> = ({
   const fetchAvailableDates = async () => {
     setLoading(true);
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       const response = await axios.get(

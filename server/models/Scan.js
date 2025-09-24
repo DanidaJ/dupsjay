@@ -72,8 +72,7 @@ const ScanSchema = new mongoose.Schema({
     maxlength: [500, 'Notes cannot be more than 500 characters']
   },
   createdBy: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
+    type: String, // Keycloak UUID string instead of MongoDB ObjectId
     required: true
   },
   createdAt: {

@@ -1,5 +1,4 @@
 const Scan = require('../models/Scan');
-const User = require('../models/User');
 const ScanType = require('../models/ScanType');
 const Booking = require('../models/Booking');
 
@@ -163,8 +162,6 @@ exports.getScans = async (req, res) => {
     }
 
     const scans = await Scan.find(query)
-      .populate('createdBy', 'name email')
-      .populate('bookings.userId', 'name email')
       .sort({ date: 1, startTime: 1 });
 
     res.status(200).json({
@@ -221,7 +218,6 @@ exports.getWeeklyScans = async (req, res) => {
         $lte: weekEnd
       }
     })
-    .populate('createdBy', 'name email')
     .sort({ date: 1, startTime: 1 });
 
     // Get all bookings for the scans in this week
@@ -229,7 +225,7 @@ exports.getWeeklyScans = async (req, res) => {
     const bookings = await Booking.find({
       scanId: { $in: scanIds },
       bookingStatus: 'confirmed'
-    }).populate('userId', 'name email');
+    });
 
     // Group bookings by scanId for easier lookup
     const bookingsByScan = {};
@@ -313,8 +309,7 @@ exports.updateScan = async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).populate('createdBy', 'name email')
-     .populate('bookings.userId', 'name email');
+    );
 
     if (!scan) {
       return res.status(404).json({
@@ -526,7 +521,9 @@ exports.bookScan = async (req, res) => {
       notes, 
       slotStartTime, 
       slotEndTime, 
-      slotNumber 
+      slotNumber,
+      bookerName,
+      bookerUserId
     } = req.body;
     const scanId = req.params.id;
     
@@ -614,6 +611,8 @@ exports.bookScan = async (req, res) => {
       patientPhone: patientPhone.trim(),
       notes: notes?.trim() || '',
       userId: userId,
+      bookerName: bookerName?.trim() || (req.user?.name || 'Anonymous User'),
+      bookerUserId: bookerUserId || userId,
       isAnonymous: !userId
     });
 
@@ -626,8 +625,7 @@ exports.bookScan = async (req, res) => {
     scan.bookedSlots = totalBookings;
     await scan.save();
 
-    // Populate booking for response
-    await booking.populate('userId', 'name email');
+    // Booking created successfully
 
     res.status(200).json({
       success: true,

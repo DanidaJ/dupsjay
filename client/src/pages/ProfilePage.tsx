@@ -10,25 +10,14 @@ const ProfilePage = () => {
   const [name, setName] = useState(currentUser?.name || '');
   const [loading, setLoading] = useState(false);
 
-  // Format date to be readable
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+
 
   const handleSaveProfile = async () => {
     try {
       setLoading(true);
       
       // This is a placeholder for actual API call
-      // You would implement this in your authService.ts
+      // Password changes are handled through Keycloak
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Simulating a successful update
@@ -96,8 +85,8 @@ const ProfilePage = () => {
                 <p className="font-medium">{currentUser?.email}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-gray-500">Account Created</p>
-                <p className="font-medium">{formatDate(currentUser?.createdAt)}</p>
+                <p className="text-sm text-gray-500">Role</p>
+                <p className="font-medium">{currentUser?.roles?.join(', ') || 'User'}</p>
               </div>
             </div>
           </div>

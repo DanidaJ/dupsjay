@@ -59,7 +59,9 @@ class KeycloakService {
         pkceMethod: 'S256',
         flow: 'standard',
         responseMode: 'fragment',
-        enableLogging: false
+        enableLogging: false,
+        // Request proper audience in token
+        scope: `openid profile email offline_access ${import.meta.env.VITE_KEYCLOAK_CLIENT_ID}`
       });
       
       // If not authenticated through SSO, check for stored tokens
@@ -118,7 +120,9 @@ class KeycloakService {
     
     await keycloak.login({
       redirectUri: window.location.origin + '/',
-      prompt: 'login'
+      prompt: 'login',
+      // Request proper audience in token
+      scope: `openid profile email offline_access ${import.meta.env.VITE_KEYCLOAK_CLIENT_ID}`
     });
   }
 

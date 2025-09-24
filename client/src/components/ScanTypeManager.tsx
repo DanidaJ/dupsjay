@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../contexts/ToastContext';
-import { getToken } from '../services/authService';
+import keycloakService from '../services/keycloakService';
 
 interface ScanType {
   _id: string;
@@ -39,7 +39,7 @@ const ScanTypeManager: React.FC<ScanTypeManagerProps> = ({
   const fetchScanTypes = async () => {
     setLoading(true);
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -66,7 +66,7 @@ const ScanTypeManager: React.FC<ScanTypeManagerProps> = ({
     }
 
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       
       if (editingId) {
         // Update existing scan type
@@ -106,7 +106,7 @@ const ScanTypeManager: React.FC<ScanTypeManagerProps> = ({
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this scan type? This action cannot be undone.')) {
       try {
-        const token = getToken();
+        const token = keycloakService.getToken();
         await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/scans/scan-types/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
-import { getToken } from '../services/authService';
+import keycloakService from '../services/keycloakService';
 import UserWeeklyScheduler from './UserWeeklyScheduler';
 import BookingModal from './BookingModal';
 import AdminBookingDetails from './AdminBookingDetails';
@@ -89,7 +89,7 @@ const UserBookingManager: React.FC = () => {
 
   const fetchScanTypes = async () => {
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const resp = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/types`, { headers });
       setScanTypes(resp.data.data || []);
@@ -118,7 +118,7 @@ const UserBookingManager: React.FC = () => {
   const fetchAvailableScans = async () => {
     setLoading(true);
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
       const weekStart = getWeekStart(currentWeek);
       
       console.log('Fetching scans for week starting:', weekStart.toISOString().split('T')[0]);
@@ -232,11 +232,13 @@ const UserBookingManager: React.FC = () => {
     patientName: string;
     patientPhone: string;
     notes?: string;
+    bookerName?: string;
+    bookerUserId?: string;
   }) => {
     if (!selectedSlot) return;
 
     try {
-      const token = getToken();
+      const token = keycloakService.getToken();
 
       // Build headers only if token exists so anonymous users can book too
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -248,7 +250,9 @@ const UserBookingManager: React.FC = () => {
         notes: bookingData.notes,
         slotStartTime: selectedSlot.startTime,
         slotEndTime: selectedSlot.endTime,
-        slotNumber: selectedSlot.slotNumber
+        slotNumber: selectedSlot.slotNumber,
+        bookerName: bookingData.bookerName,
+        bookerUserId: bookingData.bookerUserId
       }, {
         headers
       });

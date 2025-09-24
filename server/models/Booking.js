@@ -50,10 +50,20 @@ const BookingSchema = new mongoose.Schema({
     match: [/^[\d\s\-\+\(\)]{10,}$/, 'Please provide a valid phone number']
   },
   
-  // Optional user reference (null for anonymous bookings)
+  // Optional user reference (Keycloak UUID for authenticated users, null for anonymous bookings)
   userId: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
+    type: String,
+    default: null
+  },
+  
+  // Booker details (person who made the booking - could be different from patient)
+  bookerName: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Booker name cannot be more than 100 characters']
+  },
+  bookerUserId: {
+    type: String,
     default: null
   },
   
