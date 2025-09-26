@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
-import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
 import LoginPage from './pages/LoginPage'
 import ProfilePage from './pages/ProfilePage'
@@ -21,7 +20,6 @@ function App() {
         <Router>
           <Navbar />          <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -35,7 +33,7 @@ function App() {
             {/* Admin-Only Protected Routes */}
             <Route element={<AdminProtectedRoute />}>
               <Route path="/admin/scans" element={<AdminScanPage />} />
-              <Route path="/admin/make-admins" element={<SignInPage />} />
+              <Route path="/admin/make-admins" element={<SignUpPage />} />
             </Route>
 
             {/* Public booking route */}

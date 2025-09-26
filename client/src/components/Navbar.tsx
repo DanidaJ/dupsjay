@@ -159,9 +159,7 @@ const Navbar = () => {
                     <NavLink to="/admin/scans" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-700'}`}>
                       Scans
                     </NavLink>
-                    <NavLink to="/admin/make-admins" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:text-blue-700'}`}>
-                      Admins
-                    </NavLink>
+                   
                   </>
                 )}
                 <button 

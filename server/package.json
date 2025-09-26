@@ -11,7 +11,7 @@
     "data:destroy": "node seeder -d"
   },
   "dependencies": {
-    "@keycloak/keycloak-admin-client": "^26.3.4",
+    "@keycloak/keycloak-admin-client": "^26.3.5",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
