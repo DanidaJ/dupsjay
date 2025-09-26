@@ -92,7 +92,13 @@ const UserBookingManager: React.FC = () => {
       const token = keycloakService.getToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const resp = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/scans/types`, { headers });
-      setScanTypes(resp.data.data || []);
+      const types = resp.data.data || [];
+      setScanTypes(types);
+      
+      // For non-admin users, automatically select the first scan type if no type is selected
+      if (!hasRole('admin') && !selectedScanType && types.length > 0) {
+        setSelectedScanType(types[0]);
+      }
     } catch (err: any) {
       console.error('Error fetching scan types:', err);
       // Set empty array as fallback so the dropdown still shows with "Show All Scan Types" option
@@ -311,7 +317,8 @@ const UserBookingManager: React.FC = () => {
           onChange={(e) => setSelectedScanType(e.target.value)}
           className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="">Show All Scan Types</option>
+          {/* Show "Show All Scan Types" option only for admin users */}
+          {hasRole('admin') && <option value="">Show All Scan Types</option>}
           {scanTypes.map((type) => (
             <option key={type} value={type}>
               {type} only
@@ -337,8 +344,8 @@ const UserBookingManager: React.FC = () => {
           selectedScanType={selectedScanType}
           onSlotSelect={handleSlotSelect}
         />
-      ) : (
-        // Show weekly view when no scan type is selected (default)
+      ) : hasRole('admin') ? (
+        // Show weekly calendar view for admin users when no scan type is selected
         <>
           {/* Week Navigation */}
           <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm">
@@ -374,6 +381,21 @@ const UserBookingManager: React.FC = () => {
             selectedScanType={selectedScanType}
           />
         </>
+      ) : (
+        // For non-admin users, show message to select a scan type
+        <div className="bg-white p-8 rounded-lg shadow-sm text-center">
+          <div className="max-w-md mx-auto">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Please Select a Scan Type
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Choose a specific scan type from the dropdown above to view available appointment slots.
+            </p>
+            <div className="text-sm text-gray-500">
+              Available scan types: {scanTypes.join(', ')}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Booking Modal */}
