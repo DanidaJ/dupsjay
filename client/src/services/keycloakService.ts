@@ -211,7 +211,7 @@ class KeycloakService {
     lastName: string;
     password: string;
     role: string;
-  }): Promise<{ success: boolean; message?: string; user?: KeycloakUser; autoLogin?: boolean }> {
+  }): Promise<{ success: boolean; message?: string }> {
     try {
       // Call backend API to create user in Keycloak
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/keycloak-register`, {
@@ -228,53 +228,14 @@ class KeycloakService {
         throw new Error(result.message || 'Registration failed');
       }
 
-      // Check if auto-login was successful
-      if (result.autoLogin && result.token) {
-        // Set tokens in Keycloak instance
-        keycloak.token = result.token;
-        keycloak.refreshToken = result.refreshToken;
-        keycloak.idToken = result.idToken;
-        
-        // Parse and set token data
-        try {
-          const base64Url = result.token.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
-          
-          keycloak.tokenParsed = JSON.parse(jsonPayload);
-          keycloak.authenticated = true;
-          
-          console.log('Auto-login successful after registration:', keycloak.tokenParsed);
-        } catch (parseError) {
-          console.error('Failed to parse token after registration:', parseError);
-        }
-        
-        // Store tokens in localStorage for persistence
-        localStorage.setItem('kc_token', result.token);
-        if (result.refreshToken) {
-          localStorage.setItem('kc_refresh_token', result.refreshToken);
-        }
-        
-        return {
-          success: true,
-          message: result.message || 'Registration and login successful',
-          user: result.user,
-          autoLogin: true
-        };
-      }
-
       return {
         success: true,
-        message: result.message || 'Registration successful',
-        autoLogin: result.autoLogin || false
+        message: 'Registration successful'
       };
     } catch (error: any) {
       return {
         success: false,
         message: error.message || 'Registration failed',
-        autoLogin: false
       };
     }
   }

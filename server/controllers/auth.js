@@ -2,11 +2,6 @@ const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const fetch = require('node-fetch');
 
-// Helper function for base64 decoding (Node.js compatible)
-function atob(str) {
-  return Buffer.from(str, 'base64').toString('binary');
-}
-
 // @desc    Register user via Keycloak's registration endpoint
 // @route   POST /api/auth/keycloak-register
 // @access  Public
@@ -285,96 +280,17 @@ const simpleKeycloakRegister = asyncHandler(async (req, res, next) => {
       role: role || 'user'
     });
 
-    // Now automatically log in the user to get tokens
-    try {
-      const loginUrl = `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/token`;
-      
-      const loginResponse = await fetch(loginUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'password',
-          client_id: process.env.KEYCLOAK_CLIENT_ID,
-          client_secret: process.env.KEYCLOAK_CLIENT_SECRET,
-          username: username,
-          password: password,
-          scope: `openid profile email offline_access ${process.env.KEYCLOAK_CLIENT_ID}`
-        }),
-      });
-
-      if (loginResponse.ok) {
-        const tokenData = await loginResponse.json();
-        
-        // Parse the access token to get user roles
-        let userRoles = [];
-        if (tokenData.access_token) {
-          try {
-            const base64Url = tokenData.access_token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            
-            const tokenPayload = JSON.parse(jsonPayload);
-            const realmRoles = tokenPayload.realm_access?.roles || [];
-            const clientRoles = tokenPayload.resource_access?.[process.env.KEYCLOAK_CLIENT_ID]?.roles || [];
-            userRoles = [...realmRoles, ...clientRoles];
-          } catch (parseError) {
-            console.error('Failed to parse token for roles:', parseError);
-          }
-        }
-
-        // Return success with tokens for auto-login
-        res.status(201).json({
-          success: true,
-          message: 'User registered and logged in successfully',
-          autoLogin: true,
-          user: {
-            username,
-            email,
-            firstName,
-            lastName,
-            name: `${firstName} ${lastName}`.trim(),
-            roles: userRoles
-          },
-          token: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
-          idToken: tokenData.id_token
-        });
-      } else {
-        // User was created but auto-login failed
-        console.error('Auto-login failed after registration');
-        res.status(201).json({
-          success: true,
-          message: 'User registered successfully, but auto-login failed. Please log in manually.',
-          autoLogin: false,
-          data: {
-            username,
-            email,
-            firstName,
-            lastName,
-            role: role || 'user'
-          }
-        });
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully in Keycloak. You can now log in with your credentials.',
+      data: {
+        username,
+        email,
+        firstName,
+        lastName,
+        role: role || 'user'
       }
-    } catch (loginError) {
-      console.error('Auto-login error:', loginError);
-      // User was created but auto-login failed
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully, but auto-login failed. Please log in manually.',
-        autoLogin: false,
-        data: {
-          username,
-          email,
-          firstName,
-          lastName,
-          role: role || 'user'
-        }
-      });
-    }
+    });
 
   } catch (error) {
     console.error('Registration processing error:', error);

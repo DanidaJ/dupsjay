@@ -33,7 +33,6 @@ function App() {
             {/* Admin-Only Protected Routes */}
             <Route element={<AdminProtectedRoute />}>
               <Route path="/admin/scans" element={<AdminScanPage />} />
-              <Route path="/admin/make-admins" element={<SignUpPage />} />
             </Route>
 
             {/* Public booking route */}
