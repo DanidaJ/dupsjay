@@ -1,22 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../contexts/ToastContext';
+// ...existing code
 
 const Hero = () => {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
-  const { addToast } = useToast();
+  // toast not needed here; booking is public
+  // const { addToast } = useToast();
 
   const handleBookAppointment = () => {
-    if (!isLoggedIn) {
-      addToast({
-        type: 'info',
-        message: 'Please log in to book an appointment'
-      });
-      navigate('/login');
-    } else {
-      navigate('/book');
-    }
+    // Booking is public; always navigate to booking page
+    navigate('/book');
   };
 
   return (

@@ -23,22 +23,21 @@ interface BookingModalProps {
   onClose: () => void;
 }
 
-const BookingModal: React.FC<BookingModalProps> = ({
-  selectedSlot,
-  onSubmit,
-  onClose
-}) => {
+const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onClose }) => {
   const { currentUser } = useAuth();
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<{ bookerName: string; patientName: string; patientPhone: string; notes: string }>({
+    bookerName: currentUser?.name || '',
     patientName: '',
     patientPhone: '',
     notes: ''
   });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.patientName.trim()) {
       newErrors.patientName = 'Patient name is required';
@@ -67,7 +66,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         patientName: formData.patientName.trim(),
         patientPhone: formData.patientPhone.trim(),
         notes: formData.notes.trim() || undefined,
-        bookerName: currentUser?.name || 'Anonymous User',
+        bookerName: formData.bookerName?.trim() || undefined,
         bookerUserId: currentUser?.id
       });
     } catch (error) {
@@ -76,14 +75,14 @@ const BookingModal: React.FC<BookingModalProps> = ({
       setIsSubmitting(false);
     }
   };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
+      // @ts-ignore dynamic key
       [name]: value
     }));
-    
+
     // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -149,7 +148,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
         {/* Booking Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
-            {/* Booker (Non-editable) */}
+            {/* Booker (Editable) */}
             <div>
               <label htmlFor="bookerName" className="block text-sm font-medium text-gray-700 mb-1">
                 Booked By
@@ -158,11 +157,12 @@ const BookingModal: React.FC<BookingModalProps> = ({
                 type="text"
                 id="bookerName"
                 name="bookerName"
-                value={currentUser?.name || 'Anonymous User'}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+                value={formData.bookerName}
+                onChange={handleInputChange}
+                placeholder="Enter your name"
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-gray-300`}
               />
-              <p className="mt-1 text-xs text-gray-500">This is the person making the booking</p>
+              <p className="mt-1 text-xs text-gray-500">Enter the name of the person making the booking. Leave blank for anonymous.</p>
             </div>
 
             {/* Patient Name */}

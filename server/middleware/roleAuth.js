@@ -29,29 +29,3 @@ exports.adminOnly = (req, res, next) => {
   }
   next();
 };
-
-// Check if user is booker or user
-exports.bookerOnly = (req, res, next) => {
-  const userRoles = req.user.roles || [req.user.role];
-  
-  if (!userRoles.includes('booker') && !userRoles.includes('user')) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. Booker privileges required.'
-    });
-  }
-  next();
-};
-
-// Check if user is regular user (legacy support)
-exports.userOnly = (req, res, next) => {
-  const userRoles = req.user.roles || [req.user.role];
-  
-  if (!userRoles.includes('user') && !userRoles.includes('booker')) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. User privileges required.'
-    });
-  }
-  next();
-};

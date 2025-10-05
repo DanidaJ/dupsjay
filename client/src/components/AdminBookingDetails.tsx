@@ -150,16 +150,7 @@ const AdminBookingDetails: React.FC<AdminBookingDetailsProps> = ({
                         <div className="text-sm text-gray-600 space-y-1">
                           <div><strong>Booked:</strong> {formatDateTime(booking.bookedAt)}</div>
                           <div><strong>Booked By:</strong> {booking.bookerName || 'Anonymous User'}</div>
-                          <div>
-                            <strong>Type:</strong>{' '}
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              booking.isAnonymous 
-                                ? 'bg-orange-100 text-orange-800' 
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {booking.isAnonymous ? 'Anonymous' : 'Registered User'}
-                            </span>
-                          </div>
+                          <div><strong>Scan Type:</strong> {scanType}</div>
                           {!booking.isAnonymous && booking.userId && (
                             <div>
                               <strong>User:</strong> {booking.userId.name}

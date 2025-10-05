@@ -24,26 +24,11 @@ const Navbar = () => {
               } end>
                 Home
               </NavLink>
-              {isLoggedIn ? (
-                <NavLink to="/book" className={({ isActive }) =>
-                  `px-3 pt-5 pb-3 transition-colors duration-200 ${isActive ? 'text-blue-800 font-medium border-b-2 border-blue-500' : 'text-gray-500 hover:text-blue-800 hover:border-b-2 hover:border-blue-500'}`
-                }>
-                  Book
-                </NavLink>
-              ) : (
-                <button 
-                  onClick={() => {
-                    addToast({
-                      type: 'info',
-                      message: 'Please log in to book an appointment'
-                    });
-                    navigate('/login');
-                  }}
-                  className="px-3 pt-5 pb-3 transition-colors duration-200 text-gray-500 hover:text-blue-800 hover:border-b-2 hover:border-blue-500 bg-transparent border-none cursor-pointer"
-                >
-                  Book
-                </button>
-              )}
+              <NavLink to="/book" className={({ isActive }) =>
+                `px-3 pt-5 pb-3 transition-colors duration-200 ${isActive ? 'text-blue-800 font-medium border-b-2 border-blue-500' : 'text-gray-500 hover:text-blue-800 hover:border-b-2 hover:border-blue-500'}`
+              }>
+                Book
+              </NavLink>
             </div>
           </div>
 
@@ -87,9 +72,7 @@ const Navbar = () => {
                 <NavLink to="/login" className={({ isActive }) => `ml-6 px-3 py-1 rounded text-gray-700 hover:text-blue-800 ${isActive ? 'text-blue-800 font-medium' : ''}`}>
                   Log In
                 </NavLink>
-                <NavLink to="/signup" className={({ isActive }) => `ml-4 px-3 py-1 rounded ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'} transition-colors duration-200`}>
-                  Sign Up
-                </NavLink>
+                {/* Sign Up removed - admin accounts created via Keycloak */}
               </>
             )}
           </div>
@@ -118,25 +101,9 @@ const Navbar = () => {
             <NavLink to="/" end className={({ isActive }) => `block pl-3 pr-4 py-2 text-base font-medium ${isActive ? 'bg-blue-50 text-blue-800' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-800'}`}>
               Home
             </NavLink>
-            {isLoggedIn ? (
-              <NavLink to="/book" className={({ isActive }) => `block pl-3 pr-4 py-2 text-base font-medium ${isActive ? 'bg-blue-50 text-blue-800' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-800'}`}>
-                Book
-              </NavLink>
-            ) : (
-              <button 
-                onClick={() => {
-                  addToast({
-                    type: 'info',
-                    message: 'Please log in to book an appointment'
-                  });
-                  setIsMenuOpen(false);
-                  navigate('/login');
-                }}
-                className="block pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-800 text-left w-full bg-transparent border-none cursor-pointer"
-              >
-                Book
-              </button>
-            )}
+            <NavLink to="/book" className={({ isActive }) => `block pl-3 pr-4 py-2 text-base font-medium ${isActive ? 'bg-blue-50 text-blue-800' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-800'}`}>
+              Book
+            </NavLink>
             <NavLink to="/about" className={({ isActive }) => `block pl-3 pr-4 py-2 text-base font-medium ${isActive ? 'bg-blue-50 text-blue-800' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-800'}`}>
               About
             </NavLink>
@@ -186,13 +153,7 @@ const Navbar = () => {
                 <NavLink to="/login" className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'text-blue-800 font-medium' : 'text-gray-700 hover:text-blue-800'}`}>
                   Log In
                 </NavLink>
-                <NavLink 
-                  to="/signup" 
-                  onClick={() => setIsMenuOpen(false)}
-                  className={({ isActive }) => `px-4 py-2 rounded text-center ${isActive ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'}`}
-                >
-                  Sign Up
-                </NavLink>
+                {/* Sign Up removed - admin accounts created via Keycloak */}
               </>
             )}
           </div>

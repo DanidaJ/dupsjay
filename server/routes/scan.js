@@ -19,7 +19,7 @@ const {
   deleteScanType
 } = require('../controllers/scanType');
 const { protectWithFallback } = require('../middleware/keycloakAuth');
-const { adminOnly, bookerOnly } = require('../middleware/roleAuth');
+const { adminOnly } = require('../middleware/roleAuth');
 
 const router = express.Router();
 
@@ -30,7 +30,8 @@ router.get('/types', getScanTypes);
 // Allow anonymous booking and viewing of weekly scans so public users can
 // view available slots and submit bookings without authentication.
 router.post('/:id/book', bookScan);
-router.get('/my-bookings', protectWithFallback, bookerOnly, getUserBookings);
+// My bookings requires authentication but no specific role
+router.get('/my-bookings', protectWithFallback, getUserBookings);
 
 // User can view weekly scans (for booking purposes)
 router.get('/week/:date', getWeeklyScans);

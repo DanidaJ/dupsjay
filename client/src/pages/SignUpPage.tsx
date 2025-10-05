@@ -12,7 +12,7 @@ const SignUpPage = () => {
     lastName: '',
     password: '',
     confirmPassword: '',
-    role: 'booker' // Default role
+    role: 'booker' // Legacy role - page kept for future use, admin accounts created via Keycloak
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

@@ -7,6 +7,7 @@ import UserWeeklyScheduler from './UserWeeklyScheduler';
 import BookingModal from './BookingModal';
 import AdminBookingDetails from './AdminBookingDetails';
 import ChronologicalScanView from './ChronologicalScanView';
+import AppointmentDetailsModal from './AppointmentDetailsModal';
 
 interface Scan {
   _id: string;
@@ -61,6 +62,25 @@ interface SelectedSlot {
   slotNumber?: number;
 }
 
+interface BookedAppointmentDetails {
+  // Slot details
+  scanType: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  
+  // Booking details
+  patientName: string;
+  patientPhone: string;
+  notes?: string;
+  bookerName?: string;
+  bookedAt: string;
+  
+  // Additional details
+  slotNumber?: number;
+}
+
 const UserBookingManager: React.FC = () => {
   const { addToast } = useToast();
   const { currentUser, hasRole } = useAuth();
@@ -81,6 +101,8 @@ const UserBookingManager: React.FC = () => {
   const [selectedScanForBookings, setSelectedScanForBookings] = useState<Scan | null>(null);
   const [scanTypes, setScanTypes] = useState<string[]>([]);
   const [selectedScanType, setSelectedScanType] = useState<string>('');
+  const [showAppointmentDetails, setShowAppointmentDetails] = useState(false);
+  const [bookedAppointmentDetails, setBookedAppointmentDetails] = useState<BookedAppointmentDetails | null>(null);
 
   useEffect(() => {
     fetchAvailableScans();
@@ -263,6 +285,21 @@ const UserBookingManager: React.FC = () => {
         headers
       });
 
+      // Create appointment details object
+      const appointmentDetails: BookedAppointmentDetails = {
+        scanType: selectedSlot.scanType,
+        date: selectedSlot.date,
+        startTime: selectedSlot.startTime,
+        endTime: selectedSlot.endTime,
+        duration: selectedSlot.duration,
+        patientName: bookingData.patientName,
+        patientPhone: bookingData.patientPhone,
+        notes: bookingData.notes,
+        bookerName: bookingData.bookerName,
+        bookedAt: new Date().toISOString(),
+        slotNumber: selectedSlot.slotNumber
+      };
+
       addToast({ 
         message: 'Appointment booked successfully!', 
         type: 'success' 
@@ -270,6 +307,10 @@ const UserBookingManager: React.FC = () => {
       
       setShowBookingModal(false);
       setSelectedSlot(null);
+      
+      // Show appointment details modal
+      setBookedAppointmentDetails(appointmentDetails);
+      setShowAppointmentDetails(true);
       
       // Refresh the scans to show updated availability
       fetchAvailableScans();
@@ -308,23 +349,34 @@ const UserBookingManager: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       {/* Scan Type Selection */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-        <label htmlFor="scanType" className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           Select Scan Type
         </label>
-        <select
-          id="scanType"
-          value={selectedScanType}
-          onChange={(e) => setSelectedScanType(e.target.value)}
-          className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          {/* Show "Show All Scan Types" option only for admin users */}
-          {hasRole('admin') && <option value="">Show All Scan Types</option>}
+
+        {/* Buttons for each scan type. Generated from scanTypes so adding a new scan type will automatically render a new button. */}
+        <div className="flex flex-wrap gap-2">
+          {hasRole('admin') && (
+            <button
+              type="button"
+              onClick={() => setSelectedScanType('')}
+              className={`px-3 py-2 rounded-md border ${selectedScanType === '' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors`}
+            >
+              Show All Scan Types
+            </button>
+          )}
+
           {scanTypes.map((type) => (
-            <option key={type} value={type}>
-              {type} only
-            </option>
+            <button
+              key={type}
+              type="button"
+              onClick={() => setSelectedScanType(type)}
+              className={`px-3 py-2 rounded-md border ${selectedScanType === type ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors`}
+            >
+              {type}
+            </button>
           ))}
-        </select>
+        </div>
+
         {selectedScanType && (
           <p className="mt-2 text-sm text-blue-600">
             Showing only dates with available {selectedScanType} scan slots
@@ -420,6 +472,17 @@ const UserBookingManager: React.FC = () => {
           onClose={() => {
             setShowBookingDetails(false);
             setSelectedScanForBookings(null);
+          }}
+        />
+      )}
+
+      {/* Appointment Details Modal */}
+      {showAppointmentDetails && bookedAppointmentDetails && (
+        <AppointmentDetailsModal
+          appointmentDetails={bookedAppointmentDetails}
+          onClose={() => {
+            setShowAppointmentDetails(false);
+            setBookedAppointmentDetails(null);
           }}
         />
       )}
