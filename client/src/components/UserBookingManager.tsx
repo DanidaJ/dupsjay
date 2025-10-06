@@ -100,7 +100,8 @@ const UserBookingManager: React.FC = () => {
   const [showBookingDetails, setShowBookingDetails] = useState(false);
   const [selectedScanForBookings, setSelectedScanForBookings] = useState<Scan | null>(null);
   const [scanTypes, setScanTypes] = useState<string[]>([]);
-  const [selectedScanType, setSelectedScanType] = useState<string>('');
+  // selectedScanType is nullable so no scan type is selected by default; user must click to filter
+  const [selectedScanType, setSelectedScanType] = useState<string | null>(null);
   const [showAppointmentDetails, setShowAppointmentDetails] = useState(false);
   const [bookedAppointmentDetails, setBookedAppointmentDetails] = useState<BookedAppointmentDetails | null>(null);
 
@@ -117,10 +118,7 @@ const UserBookingManager: React.FC = () => {
       const types = resp.data.data || [];
       setScanTypes(types);
       
-      // For non-admin users, automatically select the first scan type if no type is selected
-      if (!hasRole('admin') && !selectedScanType && types.length > 0) {
-        setSelectedScanType(types[0]);
-      }
+      // Do NOT auto-select a scan type — require the user to choose explicitly.
     } catch (err: any) {
       console.error('Error fetching scan types:', err);
       // Set empty array as fallback so the dropdown still shows with "Show All Scan Types" option
@@ -349,17 +347,15 @@ const UserBookingManager: React.FC = () => {
     <div className="max-w-7xl mx-auto">
       {/* Scan Type Selection */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Select Scan Type
-        </label>
 
         {/* Buttons for each scan type. Generated from scanTypes so adding a new scan type will automatically render a new button. */}
-        <div className="flex flex-wrap gap-2">
+        {/* On mobile: stack buttons vertically and make text slightly larger. On sm+ screens keep the original inline layout. */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
           {hasRole('admin') && (
             <button
               type="button"
-              onClick={() => setSelectedScanType('')}
-              className={`px-3 py-2 rounded-md border ${selectedScanType === '' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors`}
+              onClick={() => setSelectedScanType(null)}
+              className={`w-full sm:w-auto px-3 py-2 rounded-md border ${selectedScanType === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors text-base sm:text-sm`}
             >
               Show All Scan Types
             </button>
@@ -370,7 +366,7 @@ const UserBookingManager: React.FC = () => {
               key={type}
               type="button"
               onClick={() => setSelectedScanType(type)}
-              className={`px-3 py-2 rounded-md border ${selectedScanType === type ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors`}
+              className={`w-full sm:w-auto px-3 py-2 rounded-md border ${selectedScanType === type ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors text-base sm:text-sm`}
             >
               {type}
             </button>
@@ -393,7 +389,7 @@ const UserBookingManager: React.FC = () => {
       ) : selectedScanType ? (
         // Show chronological view for specific scan type
         <ChronologicalScanView
-          selectedScanType={selectedScanType}
+          selectedScanType={selectedScanType ?? ''}
           onSlotSelect={handleSlotSelect}
         />
       ) : hasRole('admin') ? (
@@ -430,7 +426,7 @@ const UserBookingManager: React.FC = () => {
             currentWeek={currentWeek}
             onSlotSelect={handleSlotSelect}
             scanTypes={scanTypes}
-            selectedScanType={selectedScanType}
+            selectedScanType={selectedScanType ?? ''}
           />
         </>
       ) : (
