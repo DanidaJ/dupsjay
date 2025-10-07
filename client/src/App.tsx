@@ -20,9 +20,9 @@ function App() {
       <ToastProvider>
         <Router>
           {/* Make the app a column with min height so footer sticks to bottom when content is short */}
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">
+          <div className="min-h-screen flex flex-col overflow-hidden">
+          <Navbar />
+            <main className="flex-1 flex flex-col">
               <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/signup" element={<SignUpPage />} />
