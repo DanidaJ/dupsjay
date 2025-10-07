@@ -1,13 +1,11 @@
 import Hero from '../components/Hero';
-import Footer from '../components/Footer';
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
       <main>
         <Hero />
       </main>
-      <Footer />
     </div>
   );
 };

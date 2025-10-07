@@ -10,6 +10,7 @@ import BookingPage from './pages/BookingPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminProtectedRoute } from './components/AdminProtectedRoute'
 
@@ -18,7 +19,11 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <Router>
-          <Navbar />          <Routes>
+          {/* Make the app a column with min height so footer sticks to bottom when content is short */}
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">
+              <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -37,7 +42,11 @@ function App() {
 
             {/* Public booking route */}
             <Route path="/book" element={<BookingPage />} />
-          </Routes>
+              </Routes>
+            </main>
+            {/* Footer will sit after main and at the bottom because of min-h-screen */}
+            <Footer />
+          </div>
         </Router>
       </ToastProvider>
     </AuthProvider>
