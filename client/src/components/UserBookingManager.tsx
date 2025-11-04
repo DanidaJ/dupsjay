@@ -81,7 +81,11 @@ interface BookedAppointmentDetails {
   slotNumber?: number;
 }
 
-const UserBookingManager: React.FC = () => {
+interface UserBookingManagerProps {
+  preSelectedScanType?: string;
+}
+
+const UserBookingManager: React.FC<UserBookingManagerProps> = ({ preSelectedScanType }) => {
   const { addToast } = useToast();
   const { currentUser, hasRole } = useAuth();
   const [weeklyScans, setWeeklyScans] = useState<WeeklyScans>({
@@ -101,7 +105,7 @@ const UserBookingManager: React.FC = () => {
   const [selectedScanForBookings, setSelectedScanForBookings] = useState<Scan | null>(null);
   const [scanTypes, setScanTypes] = useState<string[]>([]);
   // selectedScanType is nullable so no scan type is selected by default; user must click to filter
-  const [selectedScanType, setSelectedScanType] = useState<string | null>(null);
+  const [selectedScanType, setSelectedScanType] = useState<string | null>(preSelectedScanType || null);
   const [showAppointmentDetails, setShowAppointmentDetails] = useState(false);
   const [bookedAppointmentDetails, setBookedAppointmentDetails] = useState<BookedAppointmentDetails | null>(null);
 
@@ -345,40 +349,42 @@ const UserBookingManager: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Scan Type Selection */}
-      <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+      {/* Scan Type Selection - Only show if no scan type is pre-selected */}
+      {!preSelectedScanType && (
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
 
-        {/* Buttons for each scan type. Generated from scanTypes so adding a new scan type will automatically render a new button. */}
-        {/* On mobile: stack buttons vertically and make text slightly larger. On sm+ screens keep the original inline layout. */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-          {hasRole('admin') && (
-            <button
-              type="button"
-              onClick={() => setSelectedScanType(null)}
-              className={`w-full sm:w-auto px-3 py-2 rounded-md border ${selectedScanType === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors text-base sm:text-sm`}
-            >
-              Show All Scan Types
-            </button>
+          {/* Buttons for each scan type. Generated from scanTypes so adding a new scan type will automatically render a new button. */}
+          {/* On mobile: stack buttons vertically and make text slightly larger. On sm+ screens keep the original inline layout. */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+            {hasRole('admin') && (
+              <button
+                type="button"
+                onClick={() => setSelectedScanType(null)}
+                className={`w-full sm:w-auto px-3 py-2 rounded-md border ${selectedScanType === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors text-base sm:text-sm`}
+              >
+                Show All Scan Types
+              </button>
+            )}
+
+            {scanTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setSelectedScanType(type)}
+                className={`w-full sm:w-auto px-3 py-2 rounded-md border ${selectedScanType === type ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors text-base sm:text-sm`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          {selectedScanType && (
+            <p className="mt-2 text-sm text-blue-600">
+              Showing only dates with available {selectedScanType} scan slots
+            </p>
           )}
-
-          {scanTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => setSelectedScanType(type)}
-              className={`w-full sm:w-auto px-3 py-2 rounded-md border ${selectedScanType === type ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'} hover:shadow-sm transition-colors text-base sm:text-sm`}
-            >
-              {type}
-            </button>
-          ))}
         </div>
-
-        {selectedScanType && (
-          <p className="mt-2 text-sm text-blue-600">
-            Showing only dates with available {selectedScanType} scan slots
-          </p>
-        )}
-      </div>
+      )}
 
       {/* Content Area */}
       {loading ? (

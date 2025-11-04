@@ -7,6 +7,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import AdminScanPage from './pages/AdminScanPage'
 import BookingPage from './pages/BookingPage'
+import ScanTypeAppointmentsPage from './pages/ScanTypeAppointmentsPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import Navbar from './components/Navbar'
@@ -40,8 +41,9 @@ function App() {
               <Route path="/admin/scans" element={<AdminScanPage />} />
             </Route>
 
-            {/* Public booking route */}
+            {/* Public booking routes */}
             <Route path="/book" element={<BookingPage />} />
+            <Route path="/book/:scanType" element={<ScanTypeAppointmentsPage />} />
               </Routes>
             </main>
             {/* Footer will sit after main and at the bottom because of min-h-screen */}
