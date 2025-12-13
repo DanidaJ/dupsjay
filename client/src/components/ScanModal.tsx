@@ -186,9 +186,9 @@ const ScanModal: React.FC<ScanModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Schedule Scan Sessions</h2>
+      <div className="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[95vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center px-6 py-3 border-b">
+          <h2 className="text-lg font-bold text-gray-800">Schedule Scan Sessions</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -198,14 +198,14 @@ const ScanModal: React.FC<ScanModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 h-full">
             {/* Left side - Form (2/3 width on large screens) */}
-            <div className="lg:col-span-2 overflow-y-auto pr-4">
-              <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
-                <p className="text-sm text-blue-800">
+            <div className="lg:col-span-2 overflow-y-auto pr-2">
+              <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
+                <p className="text-xs text-blue-800">
                   <strong>Setting up scans for:</strong> {selectedSlot.day}, {new Date(selectedSlot.date).toLocaleDateString()}
                 </p>
-                <p className="text-sm text-blue-600 mt-1">
+                <p className="text-xs text-blue-600 mt-1">
                   Choose the scan type and number of scans. The system will automatically calculate the duration and end time based on the scan type settings.
                 </p>
               </div>
@@ -343,8 +343,8 @@ const ScanModal: React.FC<ScanModalProps> = ({
             </div>
 
             {/* Right side - Daily Timeline (1/3 width on large screens) */}
-            <div className="lg:col-span-1 border-l border-gray-200 pl-6">
-              <div className="h-full">
+            <div className="lg:col-span-1 border-l border-gray-200 pl-4">
+              <div className="h-full max-h-[calc(95vh-8rem)]">
                 {loadingScans ? (
                   <div className="flex justify-center items-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

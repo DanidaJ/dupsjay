@@ -30,99 +30,97 @@ const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({ scans, selectedDa
 
   const timeSlots = generateTimeSlots();
 
-  // Check if a time slot has a scan
-  const getScanForTimeSlot = (time: string) => {
-    return scans.filter(scan => {
-      const slotMinutes = timeToMinutes(time);
-      const scanStartMinutes = timeToMinutes(scan.startTime);
-      const scanEndMinutes = timeToMinutes(scan.endTime);
-      
-      // Check if this time slot falls within the scan period
-      return slotMinutes >= scanStartMinutes && slotMinutes < scanEndMinutes;
-    });
-  };
-
   const timeToMinutes = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
-  const isStartOfScan = (time: string, scan: Scan) => {
-    return time === scan.startTime;
+  const calculateScanPosition = (scan: Scan) => {
+    const startMinutes = timeToMinutes(scan.startTime);
+    const endMinutes = timeToMinutes(scan.endTime);
+    const firstSlotMinutes = timeToMinutes(timeSlots[0]); // 6:00 AM = 360 minutes
+    
+    // Calculate position from top (each 30 min slot is either h-8 or h-6)
+    // We'll use a consistent height per slot for positioning
+    const slotHeight = 28; // Average height in pixels (h-7)
+    const slotsFromStart = (startMinutes - firstSlotMinutes) / 30;
+    const durationInSlots = (endMinutes - startMinutes) / 30;
+    
+    return {
+      top: slotsFromStart * slotHeight,
+      height: durationInSlots * slotHeight
+    };
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-50 rounded-lg border border-gray-200">
-      <div className="sticky top-0 bg-white border-b border-gray-300 p-3 z-10">
-        <h3 className="font-semibold text-gray-800 text-center">
+    <div className="flex flex-col h-full bg-gray-50 rounded-lg border border-gray-200">
+      <div className="bg-white border-b border-gray-300 p-2">
+        <h3 className="font-semibold text-gray-800 text-center text-sm">
           Daily Schedule
         </h3>
-        <p className="text-xs text-gray-600 text-center mt-1">
+        <p className="text-xs text-gray-600 text-center mt-0.5">
           {new Date(selectedDate).toLocaleDateString('en-US', { 
-            weekday: 'long', 
+            weekday: 'short', 
             month: 'short', 
             day: 'numeric' 
           })}
         </p>
       </div>
       
-      <div className="p-2">
-        {timeSlots.map((time) => {
-          const scansAtTime = getScanForTimeSlot(time);
-          const isHourMark = time.endsWith(':00');
+      <div className="flex-1 overflow-y-auto p-2">
+        <div className="relative">
+          {/* Time grid */}
+          {timeSlots.map((time) => {
+            const isHourMark = time.endsWith(':00');
+            
+            return (
+              <div
+                key={time}
+                className={`flex items-center border-l-2 border-gray-300 pl-2 ${
+                  isHourMark ? 'h-7' : 'h-7'
+                }`}
+              >
+                {/* Time label */}
+                <div className={`w-16 text-xs ${isHourMark ? 'font-semibold text-gray-700' : 'text-gray-500'}`}>
+                  {isHourMark ? time : ''}
+                </div>
+                
+                {/* Timeline area with border */}
+                <div className={`flex-1 h-full ${isHourMark ? 'border-t border-gray-200' : ''}`}></div>
+              </div>
+            );
+          })}
           
-          return (
-            <div
-              key={time}
-              className={`relative flex items-center border-l-2 border-gray-300 pl-2 ${
-                isHourMark ? 'h-8' : 'h-6'
-              }`}
-            >
-              {/* Time label */}
-              <div className={`w-16 text-xs ${isHourMark ? 'font-semibold text-gray-700' : 'text-gray-500'}`}>
-                {isHourMark ? time : ''}
-              </div>
+          {/* Scan blocks positioned absolutely */}
+          <div className="absolute top-0 left-20 right-0 pointer-events-none">
+            {scans.map((scan) => {
+              const position = calculateScanPosition(scan);
               
-              {/* Timeline area */}
-              <div className="flex-1 relative">
-                {scansAtTime.length > 0 ? (
-                  <div className="space-y-1">
-                    {scansAtTime.map((scan) => {
-                      const isStart = isStartOfScan(time, scan);
-                      
-                      return (
-                        <div
-                          key={scan._id}
-                          className={`${
-                            isStart 
-                              ? 'bg-blue-100 border border-blue-300 rounded px-2 py-1' 
-                              : 'bg-blue-50 border-l-2 border-blue-300 px-2'
-                          }`}
-                        >
-                          {isStart && (
-                            <div className="text-xs">
-                              <div className="font-semibold text-blue-800">
-                                {scan.scanType}
-                              </div>
-                              <div className="text-blue-600 flex items-center justify-between">
-                                <span>{scan.startTime} - {scan.endTime}</span>
-                                <span className="ml-2">
-                                  {scan.bookedSlots}/{scan.totalSlots}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+              return (
+                <div
+                  key={scan._id}
+                  className="absolute left-0 right-0 bg-blue-100 border border-blue-300 rounded px-2 py-1"
+                  style={{
+                    top: `${position.top}px`,
+                    height: `${position.height}px`
+                  }}
+                >
+                  <div className="text-xs">
+                    <div className="font-semibold text-blue-800">
+                      {scan.scanType}
+                    </div>
+                    <div className="text-blue-600 flex items-center justify-between">
+                      <span>{scan.startTime} - {scan.endTime}</span>
+                      <span className="ml-2">
+                        {scan.bookedSlots}/{scan.totalSlots}
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <div className={`h-full ${isHourMark ? 'border-t border-gray-200' : ''}`}></div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
