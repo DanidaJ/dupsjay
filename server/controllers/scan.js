@@ -748,3 +748,93 @@ exports.getScanBookings = async (req, res) => {
     });
   }
 };
+
+// @desc    Get scans for a specific date
+// @route   GET /api/scans/date/:date
+// @access  Private/Admin
+exports.getScansByDate = async (req, res) => {
+  try {
+    const { date } = req.params;
+    
+    // Parse date string (expected format: YYYY-MM-DD)
+    const searchDate = new Date(date + 'T00:00:00.000Z');
+    
+    // Get all scans for this date
+    const scans = await Scan.find({
+      date: searchDate
+    })
+    .populate('createdBy', 'name email')
+    .sort({ startTime: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: scans.length,
+      data: scans
+    });
+  } catch (err) {
+    console.error('Error fetching scans by date:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+// @desc    Get all bookings for a specific week
+// @route   GET /api/scans/bookings/week/:date
+// @access  Private/Admin
+exports.getWeeklyBookings = async (req, res) => {
+  try {
+    const { date } = req.params;
+    
+    // Parse date in UTC to avoid timezone issues
+    const inputDate = new Date(date + 'T00:00:00.000Z');
+    
+    // Get the start of the week (Monday)
+    const weekStart = new Date(inputDate);
+    const dayOfWeek = weekStart.getUTCDay();
+    
+    // Calculate days to subtract to get to Monday (using UTC methods)
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    weekStart.setUTCDate(weekStart.getUTCDate() - daysToSubtract);
+    weekStart.setUTCHours(0, 0, 0, 0);
+    
+    // Get the end of the week (Sunday)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+    weekEnd.setUTCHours(23, 59, 59, 999);
+
+    console.log('=== WEEKLY BOOKINGS DEBUG ===');
+    console.log('Input date:', date);
+    console.log('Week start (UTC):', weekStart.toISOString());
+    console.log('Week end (UTC):', weekEnd.toISOString());
+
+    // Get all bookings for the week
+    const bookings = await Booking.find({
+      scanDate: {
+        $gte: weekStart,
+        $lte: weekEnd
+      },
+      bookingStatus: 'confirmed'
+    })
+    .sort({ scanDate: 1, slotStartTime: 1 });
+
+    console.log(`Found ${bookings.length} bookings for the week`);
+    console.log('==============================');
+
+    res.status(200).json({
+      success: true,
+      weekStart: weekStart.toISOString().split('T')[0],
+      weekEnd: weekEnd.toISOString().split('T')[0],
+      count: bookings.length,
+      data: bookings
+    });
+  } catch (err) {
+    console.error('Error fetching weekly bookings:', err.message);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+

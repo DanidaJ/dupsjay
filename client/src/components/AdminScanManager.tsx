@@ -221,12 +221,13 @@ const AdminScanManager: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       addToast({ message: 'Scan scheduled successfully', type: 'success' });
-      fetchWeeklyScans();
+      await fetchWeeklyScans();
       setShowModal(false);
     } catch (error: any) {
       console.error('Error creating scan:', error);
       console.error('Error response:', error.response?.data);
       addToast({ message: error.response?.data?.message || 'Error creating scan', type: 'error' });
+      throw error; // Re-throw to let the modal handle it
     }
   };
 

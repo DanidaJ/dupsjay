@@ -3,6 +3,7 @@ const {
   createScan,
   getScans,
   getWeeklyScans,
+  getScansByDate,
   updateScan,
   deleteScan,
   getScanTypes,
@@ -10,7 +11,8 @@ const {
   getUserBookings,
   getBookingDetails,
   getScanBookings,
-  getAvailableDatesForScanType
+  getAvailableDatesForScanType,
+  getWeeklyBookings
 } = require('../controllers/scan');
 const {
   getScanTypes: getAllScanTypes,
@@ -36,10 +38,14 @@ router.get('/my-bookings', protectWithFallback, getUserBookings);
 // User can view weekly scans (for booking purposes)
 router.get('/week/:date', getWeeklyScans);
 
+// Get scans for a specific date (admin only)
+router.get('/date/:date', protectWithFallback, adminOnly, getScansByDate);
+
 // Get available dates for a specific scan type (public access)
 router.get('/available-dates/:scanType', getAvailableDatesForScanType);
 
 // Admin booking management routes
+router.get('/bookings/week/:date', protectWithFallback, adminOnly, getWeeklyBookings);
 router.get('/bookings/:id', protectWithFallback, adminOnly, getBookingDetails);
 router.get('/:id/bookings', protectWithFallback, adminOnly, getScanBookings);
 

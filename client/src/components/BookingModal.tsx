@@ -39,6 +39,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    if (!formData.bookerName.trim()) {
+      newErrors.bookerName = 'Booker name is required';
+    }
+
     if (!formData.patientName.trim()) {
       newErrors.patientName = 'Patient name is required';
     }
@@ -66,7 +70,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
         patientName: formData.patientName.trim(),
         patientPhone: formData.patientPhone.trim(),
         notes: formData.notes.trim() || undefined,
-        bookerName: formData.bookerName?.trim() || undefined,
+        bookerName: formData.bookerName.trim(),
         bookerUserId: currentUser?.id
       });
     } catch (error) {
@@ -148,10 +152,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
         {/* Booking Form */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
-            {/* Booker (Editable) */}
+            {/* Booker (Required) */}
             <div>
               <label htmlFor="bookerName" className="block text-sm font-medium text-gray-700 mb-1">
-                Booked By
+                Booked By *
               </label>
               <input
                 type="text"
@@ -160,9 +164,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
                 value={formData.bookerName}
                 onChange={handleInputChange}
                 placeholder="Enter your name"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-gray-300`}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.bookerName ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
-              <p className="mt-1 text-xs text-gray-500">Enter the name of the person making the booking. Leave blank for anonymous.</p>
+              {errors.bookerName && (
+                <p className="mt-1 text-sm text-red-600">{errors.bookerName}</p>
+              )}
             </div>
 
             {/* Patient Name */}

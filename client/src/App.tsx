@@ -6,6 +6,7 @@ import ProfilePage from './pages/ProfilePage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import AdminScanPage from './pages/AdminScanPage'
+import AdminBookingsPage from './pages/AdminBookingsPage'
 import BookingPage from './pages/BookingPage'
 import ScanTypeAppointmentsPage from './pages/ScanTypeAppointmentsPage'
 import { AuthProvider } from './contexts/AuthContext'
@@ -39,6 +40,7 @@ function App() {
             {/* Admin-Only Protected Routes */}
             <Route element={<AdminProtectedRoute />}>
               <Route path="/admin/scans" element={<AdminScanPage />} />
+              <Route path="/admin/bookings" element={<AdminBookingsPage />} />
             </Route>
 
             {/* Public booking routes */}

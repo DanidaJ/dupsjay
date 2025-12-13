@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import keycloakService from '../services/keycloakService';
+import DailyTimelineView from './DailyTimelineView';
 
 interface ScanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (scanData: any) => void;
+  onSubmit: (scanData: any) => Promise<void>;
   scanTypes: string[];
   scanTypeDetails?: Array<{_id: string; name: string; duration: number}>;
   selectedSlot: {
@@ -11,6 +14,16 @@ interface ScanModalProps {
     time: string;
     date: string;
   };
+}
+
+interface Scan {
+  _id: string;
+  scanType: string;
+  startTime: string;
+  endTime: string;
+  totalSlots: number;
+  bookedSlots: number;
+  availableSlots: number;
 }
 
 const ScanModal: React.FC<ScanModalProps> = ({
@@ -29,6 +42,8 @@ const ScanModal: React.FC<ScanModalProps> = ({
     totalSlots: 1,
     notes: ''
   });
+  const [dailyScans, setDailyScans] = useState<Scan[]>([]);
+  const [loadingScans, setLoadingScans] = useState(false);
 
 
   // Reset form when modal opens
@@ -43,12 +58,34 @@ const ScanModal: React.FC<ScanModalProps> = ({
         totalSlots: 1,
         notes: ''
       });
+      // Fetch scans for the selected date
+      fetchDailyScans();
     }
   }, [isOpen, selectedSlot]);
 
+  const fetchDailyScans = async () => {
+    setLoadingScans(true);
+    try {
+      const token = keycloakService.getToken();
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/scans/date/${selectedSlot.date}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      setDailyScans(response.data.data || []);
+    } catch (error: any) {
+      console.error('Error fetching daily scans:', error);
+      setDailyScans([]);
+    } finally {
+      setLoadingScans(false);
+    }
+  };
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const scanData = {
@@ -56,7 +93,13 @@ const ScanModal: React.FC<ScanModalProps> = ({
       date: selectedSlot.date
     };
     
-    onSubmit(scanData);
+    try {
+      await onSubmit(scanData);
+      // Refresh the daily scans after successful submission
+      await fetchDailyScans();
+    } catch (error) {
+      console.error('Error submitting scan:', error);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -142,9 +185,9 @@ const ScanModal: React.FC<ScanModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold text-gray-800">Schedule Scan Sessions</h2>
           <button
             onClick={onClose}
@@ -154,145 +197,168 @@ const ScanModal: React.FC<ScanModalProps> = ({
           </button>
         </div>
 
-        <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
-          <p className="text-sm text-blue-800">
-            <strong>Setting up scans for:</strong> {selectedSlot.day}, {new Date(selectedSlot.date).toLocaleDateString()}
-          </p>
-          <p className="text-sm text-blue-600 mt-1">
-            Choose the scan type and number of scans. The system will automatically calculate the duration and end time based on the scan type settings.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Scan Type *
-            </label>
-            <select
-              name="scanType"
-              value={formData.scanType}
-              onChange={handleChange}
-              required
-              disabled={false}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select scan type</option>
-              {scanTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            {formData.scanType && formData.duration > 0 && (
-              <p className="text-sm text-gray-600 mt-1">
-                Duration per scan: {formData.duration} minutes
-              </p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Time *
-              </label>
-              <input
-                type="time"
-                name="startTime"
-                value={formData.startTime}
-                onChange={handleChange}
-                required
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                When the first scan starts
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Number of Scans *
-              </label>
-              <input
-                type="number"
-                name="totalSlots"
-                value={formData.totalSlots}
-                onChange={handleChange}
-                min="1"
-                max="50"
-                required
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="How many scans?"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                How many {formData.scanType || 'scans'} to schedule
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Time (Calculated)
-              </label>
-              <input
-                type="time"
-                name="endTime"
-                value={formData.endTime}
-                readOnly
-                placeholder={formData.duration > 0 && formData.totalSlots > 0 ? "Calculating..." : "--:--"}
-                className="w-full p-2 border border-gray-300 rounded-md bg-gray-50"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                When the last scan ends
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Time Block
-              </label>
-              <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-                {formData.duration && formData.totalSlots ? 
-                  `${formData.duration * formData.totalSlots} minutes` : 
-                  'Select scan type and slots'
-                }
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 h-full">
+            {/* Left side - Form (2/3 width on large screens) */}
+            <div className="lg:col-span-2 overflow-y-auto pr-4">
+              <div className="mb-4 p-3 bg-blue-50 rounded border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Setting up scans for:</strong> {selectedSlot.day}, {new Date(selectedSlot.date).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-blue-600 mt-1">
+                  Choose the scan type and number of scans. The system will automatically calculate the duration and end time based on the scan type settings.
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Total time for all scans
-              </p>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scan Type *
+                  </label>
+                  <select
+                    name="scanType"
+                    value={formData.scanType}
+                    onChange={handleChange}
+                    required
+                    disabled={false}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select scan type</option>
+                    {scanTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  {formData.scanType && formData.duration > 0 && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Duration per scan: {formData.duration} minutes
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Time *
+                    </label>
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={handleChange}
+                      required
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      When the first scan starts
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Number of Scans *
+                    </label>
+                    <input
+                      type="number"
+                      name="totalSlots"
+                      value={formData.totalSlots}
+                      onChange={handleChange}
+                      min="1"
+                      max="50"
+                      required
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="How many scans?"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      How many {formData.scanType || 'scans'} to schedule
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      End Time (Calculated)
+                    </label>
+                    <input
+                      type="time"
+                      name="endTime"
+                      value={formData.endTime}
+                      readOnly
+                      placeholder={formData.duration > 0 && formData.totalSlots > 0 ? "Calculating..." : "--:--"}
+                      className="w-full p-2 border border-gray-300 rounded-md bg-gray-50"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      When the last scan ends
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Total Time Block
+                    </label>
+                    <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                      {formData.duration && formData.totalSlots ? 
+                        `${formData.duration * formData.totalSlots} minutes` : 
+                        'Select scan type and slots'
+                      }
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total time for all scans
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Optional notes about the scan..."
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!formData.scanType || !formData.duration}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Schedule {formData.totalSlots} {formData.scanType || 'Scan'}
+                    {formData.totalSlots > 1 ? 's' : ''}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Right side - Daily Timeline (1/3 width on large screens) */}
+            <div className="lg:col-span-1 border-l border-gray-200 pl-6">
+              <div className="h-full">
+                {loadingScans ? (
+                  <div className="flex justify-center items-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  <DailyTimelineView 
+                    scans={dailyScans}
+                    selectedDate={selectedSlot.date}
+                  />
+                )}
+              </div>
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={3}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Optional notes about the scan..."
-            />
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!formData.scanType || !formData.duration}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              Schedule {formData.totalSlots} {formData.scanType || 'Scan'}
-              {formData.totalSlots > 1 ? 's' : ''}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );
