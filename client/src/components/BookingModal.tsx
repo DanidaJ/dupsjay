@@ -15,7 +15,7 @@ interface BookingModalProps {
   selectedSlot: SelectedSlot;
   onSubmit: (bookingData: {
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     notes?: string;
     bookerName?: string;
     bookerUserId?: string;
@@ -26,10 +26,10 @@ interface BookingModalProps {
 const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onClose }) => {
   const { currentUser } = useAuth();
 
-  const [formData, setFormData] = useState<{ bookerName: string; patientName: string; patientPhone: string; notes: string }>({
+  const [formData, setFormData] = useState<{ bookerName: string; patientName: string; patientId: string; notes: string }>({
     bookerName: currentUser?.name || '',
     patientName: '',
-    patientPhone: '',
+    patientId: '',
     notes: ''
   });
 
@@ -47,10 +47,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
       newErrors.patientName = 'Patient name is required';
     }
 
-    if (!formData.patientPhone.trim()) {
-      newErrors.patientPhone = 'Phone number is required';
-    } else if (!/^[\d\s\-\+\(\)]{10,}$/.test(formData.patientPhone.replace(/\s/g, ''))) {
-      newErrors.patientPhone = 'Please enter a valid phone number';
+    if (!formData.patientId.trim()) {
+      newErrors.patientId = 'Patient ID is required';
     }
 
     setErrors(newErrors);
@@ -68,7 +66,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
     try {
       await onSubmit({
         patientName: formData.patientName.trim(),
-        patientPhone: formData.patientPhone.trim(),
+        patientId: formData.patientId.trim(),
         notes: formData.notes.trim() || undefined,
         bookerName: formData.bookerName.trim(),
         bookerUserId: currentUser?.id
@@ -194,24 +192,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ selectedSlot, onSubmit, onC
               )}
             </div>
 
-            {/* Phone Number */}
+            {/* Patient ID */}
             <div>
-              <label htmlFor="patientPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number *
+              <label htmlFor="patientId" className="block text-sm font-medium text-gray-700 mb-1">
+                Patient ID *
               </label>
               <input
-                type="tel"
-                id="patientPhone"
-                name="patientPhone"
-                value={formData.patientPhone}
+                type="text"
+                id="patientId"
+                name="patientId"
+                value={formData.patientId}
                 onChange={handleInputChange}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.patientPhone ? 'border-red-300' : 'border-gray-300'
+                  errors.patientId ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Enter phone number"
+                placeholder="Enter patient ID"
               />
-              {errors.patientPhone && (
-                <p className="mt-1 text-sm text-red-600">{errors.patientPhone}</p>
+              {errors.patientId && (
+                <p className="mt-1 text-sm text-red-600">{errors.patientId}</p>
               )}
             </div>
 

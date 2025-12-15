@@ -19,7 +19,7 @@ interface Scan {
     slotStartTime: string;
     slotEndTime: string;
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     bookedAt: string;
     notes?: string;
     isAnonymous: boolean;

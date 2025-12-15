@@ -11,7 +11,7 @@ interface BookedAppointmentDetails {
   
   // Booking details
   patientName: string;
-  patientPhone: string;
+  patientId: string;
   notes?: string;
   bookerName?: string;
   bookedAt: string;
@@ -116,8 +116,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               <span className="text-sm text-gray-900">{appointmentDetails.patientName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm font-medium text-gray-600">Phone Number:</span>
-              <span className="text-sm text-gray-900">{appointmentDetails.patientPhone}</span>
+              <span className="text-sm font-medium text-gray-600">Patient ID:</span>
+              <span className="text-sm text-gray-900">{appointmentDetails.patientId}</span>
             </div>
             {appointmentDetails.notes && (
               <div className="pt-2 border-t border-gray-200">

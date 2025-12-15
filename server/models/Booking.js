@@ -43,11 +43,10 @@ const BookingSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Patient name cannot be more than 100 characters']
   },
-  patientPhone: {
+  patientId: {
     type: String,
-    required: [true, 'Patient phone is required'],
-    trim: true,
-    match: [/^[\d\s\-\+\(\)]{10,}$/, 'Please provide a valid phone number']
+    required: [true, 'Patient ID is required'],
+    trim: true
   },
   
   // Optional user reference (Keycloak UUID for authenticated users, null for anonymous bookings)
@@ -103,6 +102,6 @@ BookingSchema.pre('save', function(next) {
 BookingSchema.index({ scanId: 1, slotNumber: 1 }, { unique: true });
 BookingSchema.index({ scanDate: 1 });
 BookingSchema.index({ userId: 1 });
-BookingSchema.index({ patientPhone: 1 });
+BookingSchema.index({ patientId: 1 });
 
 module.exports = mongoose.model('Booking', BookingSchema);

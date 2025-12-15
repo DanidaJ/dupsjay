@@ -23,7 +23,7 @@ interface Scan {
     _id: string;
     userId: string;
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     bookedAt: string;
     notes?: string;
   }>;
@@ -33,7 +33,7 @@ interface Scan {
     slotStartTime: string;
     slotEndTime: string;
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     bookedAt: string;
     notes?: string;
     isAnonymous: boolean;
@@ -72,7 +72,7 @@ interface BookedAppointmentDetails {
   
   // Booking details
   patientName: string;
-  patientPhone: string;
+    patientId: string;
   notes?: string;
   bookerName?: string;
   bookedAt: string;
@@ -260,7 +260,7 @@ const UserBookingManager: React.FC<UserBookingManagerProps> = ({ preSelectedScan
 
   const handleBookingSubmit = async (bookingData: {
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     notes?: string;
     bookerName?: string;
     bookerUserId?: string;
@@ -276,7 +276,7 @@ const UserBookingManager: React.FC<UserBookingManagerProps> = ({ preSelectedScan
       // TODO: Replace with actual booking endpoint when it's implemented
       await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/scans/${selectedSlot.scanId}/book`, {
         patientName: bookingData.patientName,
-        patientPhone: bookingData.patientPhone,
+        patientId: bookingData.patientId,
         notes: bookingData.notes,
         slotStartTime: selectedSlot.startTime,
         slotEndTime: selectedSlot.endTime,
@@ -295,7 +295,7 @@ const UserBookingManager: React.FC<UserBookingManagerProps> = ({ preSelectedScan
         endTime: selectedSlot.endTime,
         duration: selectedSlot.duration,
         patientName: bookingData.patientName,
-        patientPhone: bookingData.patientPhone,
+        patientId: bookingData.patientId,
         notes: bookingData.notes,
         bookerName: bookingData.bookerName,
         bookedAt: new Date().toISOString(),

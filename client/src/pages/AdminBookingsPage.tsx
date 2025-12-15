@@ -14,7 +14,7 @@ interface Booking {
   patientName: string;
   bookerName: string;
   bookerUserId: string;
-  patientPhone: string;
+  patientId: string;
   notes?: string;
   bookingStatus: string;
   bookedAt: string;
@@ -131,7 +131,7 @@ const AdminBookingsPage: React.FC = () => {
       'Slot End Time': booking.slotEndTime,
       'Patient Name': booking.patientName,
       'Booker Name': booking.bookerName || 'N/A',
-      'Patient Phone': booking.patientPhone,
+      'Patient ID': booking.patientId,
       'Notes': booking.notes || '',
       'Booking Status': booking.bookingStatus,
       'Booked At': new Date(booking.bookedAt).toLocaleString('en-US')
@@ -148,7 +148,7 @@ const AdminBookingsPage: React.FC = () => {
       { wch: 15 }, // Slot End Time
       { wch: 20 }, // Patient Name
       { wch: 20 }, // Booker Name
-      { wch: 15 }, // Patient Phone
+      { wch: 15 }, // Patient ID
       { wch: 30 }, // Notes
       { wch: 15 }, // Booking Status
       { wch: 20 }  // Booked At

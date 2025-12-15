@@ -61,7 +61,7 @@ const ScanSchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    patientPhone: {
+    patientId: {
       type: String,
       required: true
     },
@@ -119,7 +119,7 @@ ScanSchema.methods.hasAvailability = function() {
 };
 
 // Method to book a slot
-ScanSchema.methods.bookSlot = function(userId, patientName, patientPhone, notes = '') {
+ScanSchema.methods.bookSlot = function(userId, patientName, patientId, notes = '') {
   if (!this.hasAvailability()) {
     throw new Error('No available slots');
   }
@@ -127,7 +127,7 @@ ScanSchema.methods.bookSlot = function(userId, patientName, patientPhone, notes 
   this.bookings.push({
     userId,
     patientName,
-    patientPhone,
+    patientId,
     notes
   });
   

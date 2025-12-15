@@ -8,7 +8,7 @@ interface BookedAppointmentDetails {
   
   // Booking details
   patientName: string;
-  patientPhone: string;
+    patientId: string;
   notes?: string;
     bookerName?: string;
   bookedAt: string;
@@ -100,7 +100,7 @@ export const downloadAppointmentDetails = (appointmentDetails: BookedAppointment
         </div>
         <div class="detail-row">
             <span class="label">Phone Number:</span>
-            <span>${appointmentDetails.patientPhone}</span>
+            <span>${appointmentDetails.patientId}</span>
         </div>
         ${appointmentDetails.notes ? `
         <div style="margin-top: 10px;">
@@ -147,7 +147,7 @@ Duration: ${appointmentDetails.duration} minutes${appointmentDetails.slotNumber 
 PATIENT INFORMATION
 -------------------
 Patient Name: ${appointmentDetails.patientName}
-Phone Number: ${appointmentDetails.patientPhone}${appointmentDetails.notes ? `\nNotes: ${appointmentDetails.notes}` : ''}
+Patient ID: ${appointmentDetails.patientId}${appointmentDetails.notes ? `\nNotes: ${appointmentDetails.notes}` : ''}
 
 BOOKING INFORMATION
 -------------------

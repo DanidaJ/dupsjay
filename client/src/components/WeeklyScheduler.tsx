@@ -15,7 +15,7 @@ interface Scan {
     _id: string;
     userId: string;
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     bookedAt: string;
     notes?: string;
   }>;
@@ -25,7 +25,7 @@ interface Scan {
     slotStartTime: string;
     slotEndTime: string;
     patientName: string;
-    patientPhone: string;
+    patientId: string;
     bookedAt: string;
     notes?: string;
     isAnonymous: boolean;

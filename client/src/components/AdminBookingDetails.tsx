@@ -9,7 +9,7 @@ interface BookingDetail {
   slotStartTime: string;
   slotEndTime: string;
   patientName: string;
-  patientPhone: string;
+  patientId: string;
   bookedAt: string;
   notes?: string;
   isAnonymous: boolean;
@@ -141,7 +141,7 @@ const AdminBookingDetails: React.FC<AdminBookingDetailsProps> = ({
                         <div className="text-sm text-gray-600 space-y-1">
                           <div><strong>Time:</strong> {booking.slotStartTime} - {booking.slotEndTime}</div>
                           <div><strong>Patient:</strong> {booking.patientName}</div>
-                          <div><strong>Phone:</strong> {booking.patientPhone}</div>
+                          <div><strong>Patient ID:</strong> {booking.patientId}</div>
                         </div>
                       </div>
                       

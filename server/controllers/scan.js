@@ -262,7 +262,7 @@ exports.getWeeklyScans = async (req, res) => {
           slotStartTime: booking.slotStartTime,
           slotEndTime: booking.slotEndTime,
           patientName: booking.patientName,
-          patientPhone: booking.patientPhone,
+          patientId: booking.patientId,
           bookedAt: booking.bookedAt,
           notes: booking.notes,
           isAnonymous: booking.isAnonymous,
@@ -517,7 +517,7 @@ exports.bookScan = async (req, res) => {
   try {
     const { 
       patientName, 
-      patientPhone, 
+      patientId, 
       notes, 
       slotStartTime, 
       slotEndTime, 
@@ -531,19 +531,10 @@ exports.bookScan = async (req, res) => {
     const userId = req.user ? req.user.id : null;
 
     // Validate required fields
-    if (!patientName || !patientPhone || !slotStartTime || !slotEndTime || !slotNumber) {
+    if (!patientName || !patientId || !slotStartTime || !slotEndTime || !slotNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Patient name, phone number, slot start time, end time, and slot number are required'
-      });
-    }
-
-    // Validate phone number format
-    const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
-    if (!phoneRegex.test(patientPhone.replace(/\s/g, ''))) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide a valid phone number'
+        message: 'Patient name, patient ID, slot start time, end time, and slot number are required'
       });
     }
 
@@ -608,7 +599,7 @@ exports.bookScan = async (req, res) => {
       duration: scan.duration,
       slotNumber: slotNumber,
       patientName: patientName.trim(),
-      patientPhone: patientPhone.trim(),
+      patientId: patientId.trim(),
       notes: notes?.trim() || '',
       userId: userId,
       bookerName: bookerName?.trim() || (req.user?.name || 'Anonymous User'),
@@ -639,7 +630,7 @@ exports.bookScan = async (req, res) => {
         slotEndTime: slotEndTime,
         slotNumber: slotNumber,
         patientName: patientName,
-        patientPhone: patientPhone,
+        patientId: patientId,
         bookedAt: booking.bookedAt,
         notes: notes,
         isAnonymous: booking.isAnonymous
